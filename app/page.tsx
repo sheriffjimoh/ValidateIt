@@ -3,8 +3,6 @@ import HomeHeader from '@/components/home-header'
 import { GAPS } from '@/lib/utils'
 
 export default function Home() {
-
-
   return (
     <div className="min-h-screen bg-paper font-sans">
 
