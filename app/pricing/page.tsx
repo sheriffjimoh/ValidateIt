@@ -1,23 +1,12 @@
-'use client'
-
 import Link from 'next/link'
+import HomeHeader from '@/components/home-header'
+import SubscribeButton from '@/components/subscribe-button'
 
 export default function PricingPage() {
   return (
     <main className="min-h-screen bg-paper text-ink font-sans flex flex-col justify-between">
       {/* Header Nav */}
-      <header className="border-b border-ink/10 bg-paper sticky top-0 z-50">
-        <nav className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="font-serif text-xl font-bold tracking-tight text-ink flex items-center gap-2">
-            <span className="bg-ink text-lime px-2 py-0.5 rounded text-sm font-mono font-bold">V</span>
-            ValidateIt
-          </Link>
-          <div className="flex items-center gap-4 text-xs font-semibold">
-            <Link href="/login" className="text-ink/70 hover:text-ink">Log in</Link>
-            <Link href="/dashboard" className="bg-ink text-paper px-3.5 py-2 rounded-lg font-bold">Go to Dashboard →</Link>
-          </div>
-        </nav>
-      </header>
+      <HomeHeader />
 
       {/* Pricing Header */}
       <section className="max-w-4xl mx-auto px-6 pt-16 pb-12 text-center">
@@ -38,7 +27,7 @@ export default function PricingPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-ink/40">Free Tier</span>
               <h2 className="font-serif text-2xl font-bold text-ink mt-2 mb-4">Starter</h2>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="font-serif text-4xl font-black text-ink">$0</span>
+                <span className="font-serif text-4xl font-black text-ink">₦0</span>
                 <span className="text-sm text-ink/50">/ forever</span>
               </div>
               <ul className="space-y-3 text-sm text-ink/70 mb-8">
@@ -65,7 +54,7 @@ export default function PricingPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-lime">Pro Tier</span>
               <h2 className="font-serif text-2xl font-bold text-paper mt-2 mb-4">Pro Founder</h2>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="font-serif text-4xl font-black text-paper">$29</span>
+                <span className="font-serif text-4xl font-black text-paper">₦15,000</span>
                 <span className="text-sm text-paper/60">/ month</span>
               </div>
               <ul className="space-y-3 text-sm text-paper/80 mb-8">
@@ -76,12 +65,19 @@ export default function PricingPage() {
                 <li className="flex items-center gap-2">✓ Priority Gemini AI processing</li>
               </ul>
             </div>
-            <Link
+            <SubscribeButton
+  className="block text-center w-full bg-lime text-ink font-bold py-3.5 
+    rounded-xl hover:opacity-90 transition-all text-sm border-0 cursor-pointer"
+>
+  Subscribe — ₦15,000/mo →
+</SubscribeButton>
+
+            {/* <Link
               href="/dashboard"
               className="block text-center w-full bg-lime text-ink font-bold py-3.5 rounded-xl hover:opacity-90 transition-all text-sm"
             >
-              Subscribe to Pro ($29/mo) →
-            </Link>
+              Subscribe to Pro (₦15,000/mo) →
+            </Link> */}
           </div>
         </div>
       </section>
