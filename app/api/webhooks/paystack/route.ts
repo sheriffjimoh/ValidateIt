@@ -3,10 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 
 // Use service role to bypass RLS for webhook updates
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+
 
 function verifyPaystackSignature(body: string, signature: string): boolean {
   const hash = crypto
@@ -17,6 +14,11 @@ function verifyPaystackSignature(body: string, signature: string): boolean {
 }
 
 export async function POST(request: Request) {
+
+ const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
   try {
     const body      = await request.text()
     const signature = request.headers.get('x-paystack-signature') || ''
