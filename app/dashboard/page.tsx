@@ -216,9 +216,6 @@ export default function DashboardPage() {
   const quotaLimit = profile?.credits_limit ?? 3
   const quotaPercent = Math.min((quotaUsed / quotaLimit) * 100, 100)
 
-  console.log({
-    profile
-  })
 
   return (
     <div className="min-h-screen bg-paper text-ink font-sans flex flex-col">
@@ -573,7 +570,7 @@ export default function DashboardPage() {
                   href="/pricing"
                   className="block text-center w-full bg-lime text-ink font-bold py-3.5 rounded-xl text-sm hover:opacity-90 transition-all shadow-md border border-ink/20"
                 >
-                  Upgrade to Pro ($29/mo) →
+                  Upgrade to Pro (₦15,000/mo) →
                 </Link>
               )}
             </div>

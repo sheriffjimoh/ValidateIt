@@ -6,11 +6,13 @@ import { useRouter } from 'next/navigation'
 interface Props {
   className?: string
   children?: React.ReactNode
+  disable: boolean
 }
 
-export default function SubscribeButton({ className, children }: Props) {
+export default function SubscribeButton({ className, children, disable }: Props) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+
 
   const handleSubscribe = async () => {
     setLoading(true)
@@ -37,8 +39,8 @@ export default function SubscribeButton({ className, children }: Props) {
   return (
     <button
       onClick={handleSubscribe}
-      disabled={loading}
-      className={className}
+      disabled={loading || disable }
+      className={`${className} disabled:opacity-50 disabled:pointer-events-none`}
     >
       {loading ? 'Redirecting to payment...' : children || 'Subscribe to Pro'}
     </button>
