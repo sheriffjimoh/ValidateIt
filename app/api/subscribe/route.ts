@@ -11,6 +11,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
+
+    const host     = request.headers.get('host') || ''
+    const protocol = host.includes('localhost') ? 'http' : 'https'
+    const baseUrl  = `${protocol}://${host}`
+
+    console.log('[subscribe] baseUrl detected:', baseUrl)
+
     // Get their profile
     const { data: profile } = await supabase
       .from('profiles')
@@ -33,7 +40,9 @@ export async function POST(request: Request) {
           user_id:    user.id,
           user_email: user.email,
         },
-        callback_url: `${process.env.NEXT_PUBLIC_APP_URL || `https://${request.headers.get('host')}`}/dashboard?payment=success`,
+          callback_url: `${baseUrl}/dashboard?payment=success`,
+        
+        //`${process.env.NEXT_PUBLIC_APP_URL || `https://${request.headers.get('host')}`}/dashboard?payment=success`,
       }),
     })
 
