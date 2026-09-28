@@ -8,16 +8,16 @@ import { createClient } from '@/lib/supabase/client'
 export default function HomeHeader() {
 
   const supabase = createClient()
-  const [user, setUser] = useState<any>({})
+  const [user, setUser] = useState<any>(null)
 
 useEffect(() => {
     const loadUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()    
-      setUser(user ? user : {})
+      setUser(user ? user : null)
     }
     loadUser()
   }, [])
- 
+
     return (
          <nav className="sticky top-0 z-50 border-b border-ink/[0.07] bg-paper/80 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
