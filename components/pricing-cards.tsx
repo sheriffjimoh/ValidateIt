@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import Link from "next/link";
 import SubscribeButton from "@/components/subscribe-button";
@@ -35,6 +35,7 @@ export default function PricingCards() {
     <section className="max-w-4xl mx-auto px-6 mb-20 w-full">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Free Tier */}
+
         <div className="bg-white p-8 rounded-2xl border border-ink/10 shadow-sm flex flex-col justify-between">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-ink/40">
@@ -43,12 +44,20 @@ export default function PricingCards() {
             <h2 className="font-serif text-2xl font-bold text-ink mt-2 mb-4">
               Starter
             </h2>
-            <div className="flex items-baseline gap-1 mb-6">
-              <span className="font-serif text-4xl font-black text-ink">
-                ₦0
+
+            {/* Matches the layout style of the Pro Tier with USD parity */}
+            <div className="flex flex-col gap-0.5 mb-6">
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-serif text-4xl font-black text-ink">
+                  $0
+                </span>
+                <span className="text-sm text-ink/50">/ forever</span>
+              </div>
+              <span className="text-xs font-mono text-ink/40 tracking-wide">
+                No card required — ₦0 NGN
               </span>
-              <span className="text-sm text-ink/50">/ forever</span>
             </div>
+
             <ul className="space-y-3 text-sm text-ink/70 mb-8">
               <li className="flex items-center gap-2">
                 ✓ 3 Market Gap Analyses / month
@@ -64,6 +73,7 @@ export default function PricingCards() {
               </li>
             </ul>
           </div>
+
           <Link
             href="/signup"
             className="block text-center w-full border border-ink/20 text-ink font-bold py-3.5 rounded-xl hover:bg-ink/5 transition-all text-sm"
@@ -72,7 +82,6 @@ export default function PricingCards() {
           </Link>
         </div>
 
-        {/* Pro Tier */}
         <div className="bg-ink text-paper p-8 rounded-2xl shadow-xl flex flex-col justify-between relative overflow-hidden">
           <div className="absolute top-4 right-4 bg-lime text-ink text-[10px] font-bold uppercase px-2.5 py-1 rounded-full">
             Recommended
@@ -84,12 +93,20 @@ export default function PricingCards() {
             <h2 className="font-serif text-2xl font-bold text-paper mt-2 mb-4">
               Pro Founder
             </h2>
-            <div className="flex items-baseline gap-1 mb-6">
-              <span className="font-serif text-4xl font-black text-paper">
-                ₦15,000
+
+            {/* Prominent USD pricing paired with absolute Naira transparency */}
+            <div className="flex flex-col gap-0.5 mb-6">
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-serif text-4xl font-black text-paper">
+                  ~$11.00
+                </span>
+                <span className="text-sm text-paper/60">/ month</span>
+              </div>
+              <span className="text-xs font-mono text-lime/90 tracking-wide">
+                Billed as ₦15,000 NGN at checkout
               </span>
-              <span className="text-sm text-paper/60">/ month</span>
             </div>
+
             <ul className="space-y-3 text-sm text-paper/80 mb-8">
               <li className="flex items-center gap-2">
                 ✓ Unlimited Market Gap Analyses
@@ -109,26 +126,24 @@ export default function PricingCards() {
             </ul>
           </div>
 
-
           {profile ? (
-          <SubscribeButton
-            className="block text-center w-full bg-lime text-ink font-bold py-3.5 
-    rounded-xl hover:opacity-90 transition-all text-sm border-0 cursor-pointer"
-      disable={profile?.subscription_status === 'active'}
-          >
-            {
-                profile?.subscription_status === 'active' ? 'You are subscribed to Pro' : ' Subscribe — ₦15,000/mo →'
-            }
-           
-          </SubscribeButton>)
-          :
-
-         ( <Link
+            <SubscribeButton
+              className="block text-center w-full bg-lime text-ink font-bold py-3.5 
+      rounded-xl hover:opacity-90 transition-all text-sm border-0 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+              disable={profile?.subscription_status === "active"}
+            >
+              {profile?.subscription_status === "active"
+                ? "You are subscribed to Pro"
+                : "Subscribe — ₦15,000 (~$11.00) →"}
+            </SubscribeButton>
+          ) : (
+            <Link
               href="/dashboard"
               className="block text-center w-full bg-lime text-ink font-bold py-3.5 rounded-xl hover:opacity-90 transition-all text-sm"
             >
-              Subscribe to Pro (₦15,000/mo) →
-            </Link> )}
+              Subscribe to Pro — ₦15,000 (~$11.00) →
+            </Link>
+          )}
         </div>
       </div>
     </section>
