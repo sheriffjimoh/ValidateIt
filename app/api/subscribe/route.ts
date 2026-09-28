@@ -33,7 +33,7 @@ export async function POST(request: Request) {
           user_id:    user.id,
           user_email: user.email,
         },
-        callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?payment=success`,
+        callback_url: `${process.env.NEXT_PUBLIC_APP_URL || `https://${request.headers.get('host')}`}/dashboard?payment=success`,
       }),
     })
 
