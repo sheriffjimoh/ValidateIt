@@ -2,6 +2,7 @@ import Link from 'next/link'
 import HomeHeader from '@/components/home-header'
 import { GAPS } from '@/lib/utils'
 
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-paper font-sans">
@@ -22,7 +23,7 @@ export default function Home() {
 
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link href="/signup" className="rounded-xl bg-ink px-7 py-3.5 text-[14px] font-bold text-paper shadow-sm hover:opacity-90 transition-opacity">
-            Start free — no card needed
+            Start free, no card needed
           </Link>
           <Link href="/pricing" className="rounded-xl border border-ink/15 bg-white px-6 py-3.5 text-[14px] font-semibold text-ink hover:bg-ink/5 transition-colors">
             See pricing

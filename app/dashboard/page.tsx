@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Analysis, App, Profile, SavedReport } from './type'
+import Image from  "next/image"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -224,9 +225,18 @@ export default function DashboardPage() {
       <header className="border-b border-ink/10 bg-white sticky top-0 z-50">
         <nav className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link href="/" className="font-serif text-xl font-bold tracking-tight text-ink">
-              Validate<span className="text-lime">It</span>
+            <Link href="/dashboard" className="font-serif text-xl font-bold tracking-tight text-ink">
+              <Image 
+        src="/logo.png"
+        width={120}
+        height={40}
+        alt="ValidateIt Logo"
+        className="h-18 w-auto object-contain"
+      />
             </Link>
+              {/* <Link href="/" className="flex items-center" >
+     
+      </Link> */}
 
             <div className="flex items-center gap-1 bg-paper p-1 rounded-xl border border-ink/10 text-xs font-semibold">
               {(['validate', 'saved', 'billing'] as const).map(tab => (
