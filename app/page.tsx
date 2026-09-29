@@ -113,6 +113,9 @@ export default function Home() {
       <footer className="border-t border-ink/[0.07] px-6 py-5">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <span className="font-serif text-[14px] font-black text-ink">ValidateIt</span>
+          <div className="flex items-center gap-4 text-[13px] text-ink/50">
+             <Link href="/privacy" className="hover:text-ink transition-colors">Privacy policy</Link>
+           </div>
           <span className="text-[11px] text-ink/30">© 2026</span>
         </div>
       </footer>
