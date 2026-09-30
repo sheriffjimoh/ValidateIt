@@ -1,13 +1,4 @@
 
-export type App = {
-  id: number
-  name: string
-  developer: string
-  rating: number
-  reviews: number
-  icon: string
-}
-
 export type Gap = {
   rank: number
   complaint: string
@@ -36,4 +27,16 @@ export type Profile = {
   plan_type: 'free' | 'pro'
   credits_used: number
   credits_limit: number
+}
+
+
+
+export  type App = {
+  id: string
+  name: string
+  developer: string
+  rating: number
+  reviews: number
+  icon: string
+  store?: 'appstore' | 'playstore'
 }

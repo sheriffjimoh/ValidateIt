@@ -4,3 +4,4 @@ export const GAPS = [
   { rank: 3, text: 'Too expensive for solo freelancers', mentions: 180, hot: false },
   { rank: 4, text: 'No client status portal', mentions: 150, hot: false },
 ]
+
