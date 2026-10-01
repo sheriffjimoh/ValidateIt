@@ -268,16 +268,16 @@ export default function ValidatePage() {
           {error && <p className="text-red-500 text-xs mt-4">{error}</p>}
 
           {/* Quota warning */}
-          {profile?.plan_type === 'free' && (
+          {!isActivePro(profile) && (
             <div className="mt-8 bg-white border border-ink/10 rounded-xl p-4 flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold text-ink">
-                  {profile.credits_used ?? 0} of {profile.credits_limit ?? 3} free analyses used
+                  {profile?.credits_used ?? 0} of {profile?.credits_limit ?? 3} free analyses used
                 </p>
                 <div className="w-40 bg-paper h-1.5 rounded-full mt-1.5 border border-ink/10 overflow-hidden">
                   <div
                     className="bg-lime h-full rounded-full"
-                    style={{ width: `${Math.min(((profile.credits_used ?? 0) / (profile.credits_limit ?? 3)) * 100, 100)}%` }}
+                    style={{ width: `${Math.min(((profile?.credits_used ?? 0) / (profile?.credits_limit ?? 3)) * 100, 100)}%` }}
                   />
                 </div>
               </div>
