@@ -40,6 +40,8 @@ export async function POST(request: Request) {
         plan:   process.env.PAYSTACK_PRO_PLAN_CODE,
         description: `ValidateIt Pro — ${pricing.pro.monthlyLabel}`,
         metadata: {
+          price_usd: pricing.pro.usdLabel,
+          price_ngn: pricing.pro.ngnLabel,
           user_id:    user.id,
           user_email: user.email,
         },

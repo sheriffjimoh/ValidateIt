@@ -27,7 +27,10 @@ export type Profile = {
   plan_type: 'free' | 'pro'
   credits_used: number
   credits_limit: number
-  subscription_status?: 'active' | 'inactive' | 'pending' | null
+  subscription_status?: 'active' | 'inactive' | 'pending' | 'past_due' | 'cancelled' | null
+  subscription_expires_at?: string | null
+  deep_dive_used?: number
+  deep_dive_limit?: number
 }
 
 export  type App = {

@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import Image from 'next/image'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -12,6 +11,8 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendMessage, setResendMessage] = useState('')
   const [error, setError] = useState('')
   const [confirmSent, setConfirmSent] = useState(false)
 
@@ -20,30 +21,60 @@ export default function SignupPage() {
     setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
+    try {
+      const { data, error: signupError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
 
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-    } else {
-      setConfirmSent(true)
+      if (signupError) {
+        setError(signupError.message)
+      } else if (data.user?.identities?.length === 0) {
+        setError('An account may already exist for this email. Try signing in instead.')
+      } else if (data.session) {
+        router.replace('/dashboard')
+        router.refresh()
+      } else if (data.user) {
+        setConfirmSent(true)
+      } else {
+        setError('Supabase did not return a new user. Please try again or contact support.')
+      }
+    } catch (signupError) {
+      setError(signupError instanceof Error ? signupError.message : 'Could not create your account. Please try again.')
+    } finally {
       setLoading(false)
     }
   }
 
+  const handleResendConfirmation = async () => {
+    setResendLoading(true)
+    setResendMessage('')
+    try {
+      const { error: resendError } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      })
+      setResendMessage(resendError
+        ? resendError.message
+        : 'Confirmation request accepted. Check your inbox and spam folder.')
+    } catch (resendError) {
+      setResendMessage(resendError instanceof Error ? resendError.message : 'Could not resend the confirmation email.')
+    } finally {
+      setResendLoading(false)
+    }
+  }
+
   const handleGoogleSignup = async () => {
-    await supabase.auth.signInWithOAuth({
+    setError('')
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
+    if (oauthError) setError(oauthError.message)
   }
 
   return (
@@ -72,9 +103,19 @@ export default function SignupPage() {
               <div className="text-3xl mb-3">📧</div>
               <h2 className="font-serif text-xl font-bold text-ink mb-2">Check your email</h2>
               <p className="text-[13px] text-ink/55 leading-relaxed">
-                We sent a confirmation link to <strong className="text-ink">{email}</strong>.<br />
-                Click it to activate your account.
+                Supabase accepted a signup request for <strong className="text-ink">{email}</strong>.<br />
+                If email confirmation is enabled, use the link in that message to activate your account. Check spam if it does not arrive.
               </p>
+              <button
+                type="button"
+                onClick={handleResendConfirmation}
+                disabled={resendLoading}
+                className="mt-5 text-xs font-semibold text-ink underline underline-offset-4 disabled:opacity-50"
+              >
+                {resendLoading ? 'Sending...' : 'Resend confirmation email'}
+              </button>
+              {resendMessage && <p role="status" className="mt-3 text-xs text-ink/55">{resendMessage}</p>}
+              <Link href="/login" className="block mt-4 text-xs text-ink/55 underline">Back to sign in</Link>
             </div>
           ) : (
             <div className="bg-white p-6 rounded-2xl border border-ink/[0.08] shadow-sm">
@@ -112,9 +153,7 @@ export default function SignupPage() {
                   className="w-full border border-ink/15 rounded-xl px-4 py-3 text-[13px] text-ink bg-paper/50 focus:outline-none focus:border-ink/40 placeholder:text-ink/30"
                 />
 
-                {error && (
-                  <p className="text-[12px] text-red-500 font-medium">{error}</p>
-                )}
+                {error && <p role="alert" className="text-[12px] text-red-500 font-medium">{error}</p>}
 
                 <button
                   type="submit"

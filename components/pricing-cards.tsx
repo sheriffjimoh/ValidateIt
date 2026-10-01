@@ -62,16 +62,16 @@ export default function PricingCards() {
 
             <ul className="space-y-3 text-sm text-ink/70 mb-8">
               <li className="flex items-center gap-2">
-                ✓ 3 Market Gap Analyses / month
+                ✓ 3 market-gap analyses per month
               </li>
               <li className="flex items-center gap-2">
                 ✓ Up to 5 competitor apps per search
               </li>
               <li className="flex items-center gap-2">
-                ✓ Top 5 ranked market complaints
+                ✓ Top 5 ranked complaints by app
               </li>
               <li className="flex items-center gap-2">
-                ✓ Basic Markdown report copying
+                ✓ Quick report copying for your notes
               </li>
             </ul>
           </div>
@@ -111,19 +111,22 @@ export default function PricingCards() {
 
             <ul className="space-y-3 text-sm text-paper/80 mb-8">
               <li className="flex items-center gap-2">
-                ✓ Unlimited Market Gap Analyses
+                ✓ Unlimited market-gap analyses
               </li>
               <li className="flex items-center gap-2">
-                ✓ AI Dev Spec & PRD Generator
+                ✓ Compare up to 8 competitor apps per search
               </li>
               <li className="flex items-center gap-2">
-                ✓ PDF & CSV Export support
+                ✓ AI dev spec & PRD generator
               </li>
               <li className="flex items-center gap-2">
-                ✓ Save & manage search history in Dashboard
+                ✓ PDF & CSV export support
               </li>
               <li className="flex items-center gap-2">
-                ✓ Priority Gemini AI processing
+                ✓ Save and manage search history in your dashboard
+              </li>
+              <li className="flex items-center gap-2">
+                ✓ Faster AI processing for product decisions
               </li>
             </ul>
           </div>

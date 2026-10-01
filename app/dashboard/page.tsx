@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { isActivePro } from '@/lib/utils'
@@ -10,7 +10,7 @@ type StoreOption = 'appstore' | 'playstore' | 'both'
 
 export default function ValidatePage() {
   const router   = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
 
   const [profile, setProfile] = useState<Profile | null>(null)
   const [step, setStep]       = useState<'search' | 'select' | 'analyse' | 'results'>('search')
@@ -24,6 +24,7 @@ export default function ValidatePage() {
   const [error, setError]               = useState('')
   const [saving, setSaving]             = useState(false)
   const [copied, setCopied]             = useState(false)
+  const appSelectionLimit = isActivePro(profile) ? 8 : 5
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -33,7 +34,7 @@ export default function ValidatePage() {
       if (data) setProfile(data as Profile)
     }
     loadProfile()
-  }, [])
+  }, [router, supabase])
 
   // ── Step 1: Search apps ────────────────────────────────────────────────────
   const searchApps = async (e?: React.FormEvent, customMarket?: string) => {
@@ -86,7 +87,7 @@ export default function ValidatePage() {
     setSelectedApps(prev =>
       prev.find(a => a.id === app.id)
         ? prev.filter(a => a.id !== app.id)
-        : prev.length < 5 ? [...prev, app] : prev
+        : prev.length < appSelectionLimit ? [...prev, app] : prev
     )
   }
 
@@ -135,8 +136,8 @@ export default function ValidatePage() {
         await supabase.from('profiles').update({ credits_used: newCount }).eq('id', profile.id)
         setProfile(p => p ? { ...p, credits_used: newCount } : p)
       }
-    } catch (err: any) {
-      setError(err.message || 'Analysis failed.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Analysis failed.')
       setStep('select')
     } finally {
       setLoading(false)
@@ -294,7 +295,7 @@ export default function ValidatePage() {
         <div className="max-w-2xl">
           <h2 className="font-serif text-3xl font-black text-ink mb-2">Pick competitors</h2>
           <p className="text-sm text-ink/55 font-light mb-8">
-            Select up to 5 apps for <strong>"{market}"</strong>. We'll read their 1★ and 2★ reviews.
+            Select up to {Math.min(appSelectionLimit, apps.length)} apps for <strong>&quot;{market}&quot;</strong>. We&apos;ll read their 1★ and 2★ reviews.
           </p>
 
           <div className="space-y-2 mb-8">
@@ -384,7 +385,7 @@ export default function ValidatePage() {
               {selectedApps.some(a => a.store === 'playstore') && ' 🤖'}
             </p>
             <h2 className="font-serif text-2xl font-black text-ink mb-3">
-              Gaps in the "{market}" market
+              Gaps in the &quot;{market}&quot; market
             </h2>
             <p className="text-sm text-ink/65 leading-relaxed font-light">{analysis.summary}</p>
           </div>
