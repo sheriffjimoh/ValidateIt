@@ -21,6 +21,7 @@ type CancelOptions = {
   customerCode?: string | null
   email?: string | null
   emailToken?: string | null
+  planCode?: string | null
 }
 
 async function findPaystackSubscription(options: CancelOptions) {
@@ -39,16 +40,14 @@ async function findPaystackSubscription(options: CancelOptions) {
     }
   }
 
-  if (!subscription && (options.customerCode || options.email)) {
+  if ((!subscription || !subscription.email_token) && (options.customerCode || options.email)) {
     let customerCode = options.customerCode || ''
 
     if (!customerCode && options.email) {
-      const result = await paystackGet<Record<string, unknown> | Array<Record<string, unknown>>>(
-        `/customer?email=${encodeURIComponent(options.email)}`,
+      const result = await paystackGet<Record<string, unknown>>(
+        `/customer/${encodeURIComponent(options.email)}`,
       )
-      const customers = Array.isArray(result.data) ? result.data : result.data ? [result.data] : []
-      const customer = customers.find(item => item.customer_code && (!item.email || item.email === options.email))
-      customerCode = String(customer?.customer_code || '')
+      customerCode = String(result.data?.customer_code || '')
     }
 
     if (customerCode) {
@@ -58,7 +57,8 @@ async function findPaystackSubscription(options: CancelOptions) {
       const candidates = (result.data || []).filter(item =>
         item.subscription_code &&
         (item.status === 'active' || item.status === 'non-renewing') &&
-        (!process.env.PAYSTACK_PRO_PLAN_CODE || item.plan?.plan_code === process.env.PAYSTACK_PRO_PLAN_CODE),
+        (!(options.planCode || process.env.PAYSTACK_PRO_PLAN_CODE) ||
+          item.plan?.plan_code === (options.planCode || process.env.PAYSTACK_PRO_PLAN_CODE)),
       )
       const matching = options.subscriptionCode
         ? candidates.find(item => item.subscription_code === options.subscriptionCode)
@@ -79,17 +79,53 @@ async function findPaystackSubscription(options: CancelOptions) {
   return subscription
 }
 
+export async function resolvePaystackSubscription(options: CancelOptions) {
+  return findPaystackSubscription(options)
+}
+
 export async function getPaystackSubscriptionDetails(options: CancelOptions) {
-  const subscription = await findPaystackSubscription(options)
+  if (!process.env.PAYSTACK_SECRET_KEY) throw new Error('Paystack is not configured')
+
+  let customer: { id?: number; customer_code?: string; email?: string } | undefined
+  const customerIdentifier = options.customerCode || options.email
+
+  if (customerIdentifier) {
+    const result = await paystackGet<{ id?: number; customer_code?: string; email?: string }>(
+      `/customer/${encodeURIComponent(customerIdentifier)}`,
+    )
+    customer = result.data
+  }
+
+  if (!customer?.id) throw new Error('Paystack customer could not be resolved')
+
+  const result = await paystackGet<PaystackSubscription[]>(
+    `/subscription?customer=${encodeURIComponent(String(customer.id))}`,
+  )
+  const planCode = options.planCode || process.env.PAYSTACK_PRO_PLAN_CODE
+  const candidates = (result.data || []).filter(subscription =>
+    subscription.subscription_code &&
+    (!planCode || subscription.plan?.plan_code === planCode),
+  )
+
+  const subscription = options.subscriptionCode
+    ? candidates.find(item => item.subscription_code === options.subscriptionCode)
+    : undefined
+  const selectedSubscription = subscription ||
+    candidates.find(item => item.status === 'active') ||
+    candidates.find(item => item.status === 'non-renewing') ||
+    candidates[0]
+
+  if (!selectedSubscription) throw new Error('No ValidateIt Pro subscription was found for this Paystack customer')
+
   return {
-    subscriptionCode: subscription.subscription_code,
-    status: subscription.status || 'unknown',
-    amount: subscription.amount ?? subscription.plan?.amount ?? null,
-    currency: subscription.currency || 'NGN',
-    planName: subscription.plan?.name || null,
-    interval: subscription.plan?.interval || null,
-    createdAt: subscription.createdAt || subscription.start || null,
-    nextPaymentDate: subscription.next_payment_date || null,
+    subscriptionCode: selectedSubscription.subscription_code,
+    status: selectedSubscription.status || 'unknown',
+    amount: selectedSubscription.amount ?? selectedSubscription.plan?.amount ?? null,
+    currency: selectedSubscription.currency || 'NGN',
+    planName: selectedSubscription.plan?.name || null,
+    interval: selectedSubscription.plan?.interval || null,
+    createdAt: selectedSubscription.createdAt || selectedSubscription.start || null,
+    nextPaymentDate: selectedSubscription.next_payment_date || null,
   }
 }
 

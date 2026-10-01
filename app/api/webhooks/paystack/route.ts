@@ -40,7 +40,7 @@ export async function POST(request: Request) {
         const data      = event.data
         const userId    = data.metadata?.user_id
         const email     = data.customer?.email
-        const subCode   = data.subscription_code
+        const subCode   = data?.subscription_code 
 
         if (!userId && !email) break
 
@@ -92,9 +92,9 @@ export async function POST(request: Request) {
 
         if (!email && !subCode) break
 
-        const { error } = subCode
-          ? await supabase.from('profiles').update({ subscription_status: 'cancelled' }).eq('paystack_subscription_code', subCode)
-          : await supabase.from('profiles').update({ subscription_status: 'cancelled' }).eq('email', email!)
+        const { error } = email
+          ? await supabase.from('profiles').update({ subscription_status: 'cancelled' }).eq('email', email)
+          : await supabase.from('profiles').update({ subscription_status: 'cancelled' }).eq('paystack_subscription_code', subCode!)
 
         if (error) console.error('[webhook] cancellation update error:', error)
         else console.log('[webhook] marked subscription cancelled:', email || subCode)
