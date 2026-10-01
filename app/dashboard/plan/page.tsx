@@ -216,7 +216,7 @@ export default function PlanPage() {
               <dt className="text-ink/45">Amount</dt>
               <dd className="text-right font-semibold text-ink">
                 {subscriptionDetails?.amount != null
-                  ? `${subscriptionDetails.currency} ${(subscriptionDetails.amount / 100).toLocaleString()}`
+                  ? `${subscriptionDetails.currency} ${(subscriptionDetails.amount / 100).toLocaleString()} (~${pricing.pro.usdLabel} USD)`
                   : unavailableLabel}
               </dd>
               <dt className="text-ink/45">

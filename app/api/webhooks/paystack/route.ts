@@ -40,7 +40,7 @@ export async function POST(request: Request) {
         const data      = event.data
         const userId    = data.metadata?.user_id
         const email     = data.customer?.email
-        const subCode   = data.subscription_code || data.plan?.subscription_code
+        const subCode   = data.subscription_code
 
         if (!userId && !email) break
 

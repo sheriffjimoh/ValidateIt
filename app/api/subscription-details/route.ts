@@ -26,6 +26,10 @@ export async function GET() {
       .eq('user_id', user.id)
       .maybeSingle()
 
+
+      console.log('[subscription-details] savedSubscription:', savedSubscription)
+      console.log('[subscription-details] profile:', profile)
+
     if (credentialError) {
       console.error('[subscription-details] credential lookup failed:', credentialError)
       return NextResponse.json({ error: 'Could not load your subscription details' }, { status: 500 })
