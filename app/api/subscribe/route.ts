@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { pricing } from '@/lib/pricing'
 
 export async function POST(request: Request) {
   try {
@@ -35,9 +36,9 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         email: user.email,
-        amount: 1500000, // ₦15,000 in kobo (Paystack uses kobo)
+        amount: pricing.pro.paystackAmountKobo,
         plan:   process.env.PAYSTACK_PRO_PLAN_CODE,
-        description: 'ValidateIt Pro — ₦15,000/month',
+        description: `ValidateIt Pro — ${pricing.pro.monthlyLabel}`,
         metadata: {
           user_id:    user.id,
           user_email: user.email,

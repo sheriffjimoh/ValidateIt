@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { pricing } from '@/lib/pricing'
 import { isActivePro } from '@/lib/utils'
 import { Profile } from '../type'
 
@@ -99,7 +100,7 @@ export default function PlanPage() {
               hover:opacity-90 transition-all border-0 cursor-pointer font-sans
               shadow-sm disabled:opacity-50"
           >
-            {loading ? 'Redirecting...' : 'Upgrade to Pro — ₦15,000/month →'}
+            {loading ? 'Redirecting...' : `Upgrade to Pro — ${pricing.pro.monthlyLabel} →`}
           </button>
         ) : (
           <div className="text-center text-sm text-ink/45 font-light">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import SubscribeButton from "@/components/subscribe-button";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { pricing } from "@/lib/pricing";
 import { isActivePro } from "@/lib/utils";
 import type { Profile } from "../app/dashboard/type";
 
@@ -50,12 +51,12 @@ export default function PricingCards() {
             <div className="flex flex-col gap-0.5 mb-6">
               <div className="flex items-baseline gap-1.5">
                 <span className="font-serif text-4xl font-black text-ink">
-                  $0
+                  {pricing.free.label}
                 </span>
                 <span className="text-sm text-ink/50">/ forever</span>
               </div>
               <span className="text-xs font-mono text-ink/40 tracking-wide">
-                No card required — ₦0 NGN
+                No card required — {pricing.free.ngnLabel} NGN
               </span>
             </div>
 
@@ -99,12 +100,12 @@ export default function PricingCards() {
             <div className="flex flex-col gap-0.5 mb-6">
               <div className="flex items-baseline gap-1.5">
                 <span className="font-serif text-4xl font-black text-paper">
-                  ~$11.00
+                  ~{pricing.pro.usdLabel}
                 </span>
                 <span className="text-sm text-paper/60">/ month</span>
               </div>
               <span className="text-xs font-mono text-lime/90 tracking-wide">
-                Billed as ₦15,000 NGN at checkout
+                {pricing.pro.checkoutText}
               </span>
             </div>
 
@@ -135,14 +136,14 @@ export default function PricingCards() {
             >
               {hasActivePro
                 ? "You are subscribed to Pro"
-                : "Subscribe — ₦15,000 (~$11.00) →"}
+                : `Subscribe — ${pricing.pro.ngnLabel} (~${pricing.pro.usdLabel}) →`}
             </SubscribeButton>
           ) : (
             <Link
               href="/dashboard"
               className="block text-center w-full bg-lime text-ink font-bold py-3.5 rounded-xl hover:opacity-90 transition-all text-sm"
             >
-              Subscribe to Pro — ₦15,000 (~$11.00) →
+              {`Subscribe to Pro — ${pricing.pro.ngnLabel} (~${pricing.pro.usdLabel}) →`}
             </Link>
           )}
         </div>
