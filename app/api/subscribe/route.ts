@@ -37,7 +37,7 @@ export async function POST(request: Request) {
         email: user.email,
         amount: 1500000, // ₦15,000 in kobo (Paystack uses kobo)
         plan:   process.env.PAYSTACK_PRO_PLAN_CODE,
-        description: 'ValidateIt Pro — $9/month (billed in NGN)',
+        description: 'ValidateIt Pro — ₦15,000/month',
         metadata: {
           user_id:    user.id,
           user_email: user.email,

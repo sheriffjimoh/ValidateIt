@@ -27,9 +27,8 @@ export type Profile = {
   plan_type: 'free' | 'pro'
   credits_used: number
   credits_limit: number
+  subscription_status?: 'active' | 'inactive' | 'pending' | null
 }
-
-
 
 export  type App = {
   id: string

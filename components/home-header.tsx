@@ -23,7 +23,7 @@ useEffect(() => {
         <nav className="sticky top-0 z-50 border-b border-ink/[0.07] bg-paper/80 backdrop-blur-md">
   <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-2">
     
-    <Link href="/" className="flex items-center" >
+    {/* <Link href="/" className="flex items-center" >
       <Image 
         src="/logo.png"
         width={120}
@@ -31,7 +31,12 @@ useEffect(() => {
         alt="ValidateIt Logo"
         className="h-18 w-auto object-contain"
       />
-    </Link>
+    </Link> */}
+
+      <Link href="/" className="font-serif text-lg font-bold text-ink flex items-center gap-2">
+            <span className="bg-ink text-lime px-2 py-0.5 rounded text-xs font-mono font-bold">V</span>
+            ValidateIt
+          </Link>
    
     {user ? (
       <div className="flex items-center gap-3">

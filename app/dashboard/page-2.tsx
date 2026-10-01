@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Analysis, App, Profile, SavedReport } from './type'
+import { Analysis, App, Profile, SavedReport, isActivePro } from './type'
 import Image from  "next/image"
 
 export default function DashboardPage() {
@@ -113,7 +113,7 @@ export default function DashboardPage() {
     if (selectedApps.length === 0) return
 
     // Check quota
-    if (profile && profile.plan_type === 'free' && profile.credits_used >= profile.credits_limit) {
+    if (profile && !isActivePro(profile) && profile.credits_used >= profile.credits_limit) {
       setError('You\'ve used all your free analyses this month. Upgrade to Pro for unlimited.')
       return
     }
@@ -216,6 +216,7 @@ export default function DashboardPage() {
   const quotaUsed = profile?.credits_used ?? 0
   const quotaLimit = profile?.credits_limit ?? 3
   const quotaPercent = Math.min((quotaUsed / quotaLimit) * 100, 100)
+  const hasActivePlan = isActivePro(profile)
 
 
   return (
@@ -562,7 +563,7 @@ export default function DashboardPage() {
             <div className="bg-white p-8 rounded-2xl border border-ink/10 shadow-sm">
               <span className="text-xs font-mono uppercase font-bold text-ink/40">Current Plan</span>
               <h2 className="font-serif text-3xl font-black text-ink mt-1 mb-6 capitalize">
-                {profile?.plan_type === 'pro' ? 'Pro' : 'Starter (Free)'}
+                {hasActivePlan ? 'Pro' : 'Starter (Free)'}
               </h2>
 
               <div className="space-y-3 mb-6">
@@ -578,7 +579,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {profile?.plan_type !== 'pro' && (
+              {!hasActivePlan && (
                 <Link
                   href="/pricing"
                   className="block text-center w-full bg-lime text-ink font-bold py-3.5 rounded-xl text-sm hover:opacity-90 transition-all shadow-md border border-ink/20"

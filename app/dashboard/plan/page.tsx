@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { isActivePro } from '@/lib/utils'
 import { Profile } from '../type'
 
 export default function PlanPage() {
@@ -40,6 +41,7 @@ export default function PlanPage() {
   const quotaPercent = Math.min((quotaUsed / quotaLimit) * 100, 100)
   const ddUsed       = (profile as any)?.deep_dive_used  ?? 0
   const ddLimit      = (profile as any)?.deep_dive_limit ?? 2
+  const hasActivePlan = isActivePro(profile)
 
   return (
     <div className="max-w-xl mx-auto space-y-6">
@@ -54,10 +56,10 @@ export default function PlanPage() {
           <div>
             <p className="text-xs font-mono text-ink/35 uppercase tracking-widest mb-1">Current plan</p>
             <h2 className="font-serif text-2xl font-black text-ink capitalize">
-              {profile?.plan_type === 'pro' ? 'Pro' : 'Starter (Free)'}
+              {hasActivePlan ? 'Pro' : 'Starter (Free)'}
             </h2>
           </div>
-          {profile?.plan_type === 'pro' && (
+          {hasActivePlan && (
             <span className="bg-lime text-ink text-xs font-bold px-3 py-1.5 rounded-full">
               Active ✓
             </span>
@@ -89,7 +91,7 @@ export default function PlanPage() {
           </div>
         </div>
 
-        {profile?.plan_type !== 'pro' ? (
+        {!hasActivePlan ? (
           <button
             onClick={handleSubscribe}
             disabled={loading}
@@ -107,7 +109,7 @@ export default function PlanPage() {
       </div>
 
       {/* Pro features */}
-      {profile?.plan_type !== 'pro' && (
+      {!hasActivePlan && (
         <div className="bg-ink p-6 rounded-2xl">
           <p className="text-xs font-mono text-lime uppercase tracking-widest mb-4">Pro includes</p>
           <ul className="space-y-2.5">

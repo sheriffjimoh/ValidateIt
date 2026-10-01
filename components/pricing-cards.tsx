@@ -4,11 +4,13 @@ import Link from "next/link";
 import SubscribeButton from "@/components/subscribe-button";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Profile } from "../app/dashboard/type";
+import { isActivePro } from "@/lib/utils";
+import type { Profile } from "../app/dashboard/type";
 
 export default function PricingCards() {
   const supabase = createClient();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const hasActivePro = isActivePro(profile);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -28,9 +30,8 @@ export default function PricingCards() {
       if (profileData) setProfile(profileData as Profile);
     };
     loadUser();
-  }, []);
+  }, [supabase]);
 
-  console.log(profile);
   return (
     <section className="max-w-4xl mx-auto px-6 mb-20 w-full">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -130,9 +131,9 @@ export default function PricingCards() {
             <SubscribeButton
               className="block text-center w-full bg-lime text-ink font-bold py-3.5 
       rounded-xl hover:opacity-90 transition-all text-sm border-0 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
-              disable={profile?.subscription_status === "active"}
+              disable={hasActivePro}
             >
-              {profile?.subscription_status === "active"
+              {hasActivePro
                 ? "You are subscribed to Pro"
                 : "Subscribe — ₦15,000 (~$11.00) →"}
             </SubscribeButton>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { isActivePro } from '@/lib/utils'
 import { Analysis, App, Profile } from './type'
 
 type StoreOption = 'appstore' | 'playstore' | 'both'
@@ -92,7 +93,7 @@ export default function ValidatePage() {
   // ── Step 2: Run analysis ───────────────────────────────────────────────────
   const runAnalysis = async () => {
     if (selectedApps.length === 0) return
-    if (profile?.plan_type === 'free' && (profile?.credits_used ?? 0) >= (profile?.credits_limit ?? 3)) {
+    if (!isActivePro(profile) && (profile?.credits_used ?? 0) >= (profile?.credits_limit ?? 3)) {
       setError('You\'ve used all your free analyses this month. Upgrade to Pro for unlimited.')
       return
     }

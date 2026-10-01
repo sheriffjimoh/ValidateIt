@@ -46,15 +46,10 @@ export default function LoginPage() {
     <div className="min-h-screen bg-paper font-sans flex flex-col">
       {/* Nav */}
       <nav className="border-b border-ink/[0.07] px-6  py-2  flex items-center justify-between max-w-5xl mx-auto w-full">
-        <Link href="/" className="flex items-center" >
-      <Image 
-        src="/logo.png"
-        width={120}
-        height={40}
-        alt="ValidateIt Logo"
-        className="h-18 w-auto object-contain"
-      />
-    </Link>
+      <Link href="/" className="font-serif text-lg font-bold text-ink flex items-center gap-2">
+            <span className="bg-ink text-lime px-2 py-0.5 rounded text-xs font-mono font-bold">V</span>
+            ValidateIt
+          </Link>
         <Link href="/signup" className="text-[12px] text-ink/50 hover:text-ink">
           Don't have an account? <span className="font-bold text-ink underline">Sign up</span>
         </Link>
