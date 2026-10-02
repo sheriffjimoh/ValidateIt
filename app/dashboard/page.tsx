@@ -26,7 +26,7 @@ export default function ValidatePage() {
   const [error, setError]               = useState('')
   const [saving, setSaving]             = useState(false)
   const [copied, setCopied]             = useState(false)
-  const appSelectionLimit = isActivePro(profile) ? 8 : 5
+  const appSelectionLimit = 5
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -51,36 +51,40 @@ export default function ValidatePage() {
     setError('')
 
     try {
-      // Search one or both stores in parallel
-      const promises = []
-      if (store === 'appstore' || store === 'both') {
-        promises.push(
-          fetch(`/api/search-apps?q=${encodeURIComponent(q)}`)
-            .then(r => r.json())
-            .then(d => (d.apps || []).map((a: App) => ({ ...a, store: 'appstore' as const })))
-        )
-      }
-      if (store === 'playstore' || store === 'both') {
-        promises.push(
-          fetch(`/api/search-playstore?q=${encodeURIComponent(q)}`)
-            .then(r => r.json())
-            .then(d => (d.apps || []).map((a: App) => ({ ...a, store: 'playstore' as const })))
-        )
+      const appStoreRequest = store === 'appstore' || store === 'both'
+        ? fetch(`/api/search-apps?q=${encodeURIComponent(q)}`)
+            .then(response => response.json())
+            .then(data => (data.apps || []).map((app: App) => ({ ...app, store: 'appstore' as const })))
+        : Promise.resolve([] as App[])
+      const playStoreRequest = store === 'playstore' || store === 'both'
+        ? fetch(`/api/search-playstore?q=${encodeURIComponent(q)}`)
+            .then(response => response.json())
+            .then(data => (data.apps || []).map((app: App) => ({ ...app, store: 'playstore' as const })))
+        : Promise.resolve([] as App[])
+
+      const [appStoreApps, playStoreApps] = await Promise.all([appStoreRequest, playStoreRequest])
+      const candidates: App[] = []
+
+      if (store === 'both') {
+        for (let index = 0; candidates.length < 5 && (index < appStoreApps.length || index < playStoreApps.length); index += 1) {
+          if (appStoreApps[index]) candidates.push(appStoreApps[index])
+          if (playStoreApps[index] && candidates.length < 5) candidates.push(playStoreApps[index])
+        }
+      } else {
+        candidates.push(...appStoreApps, ...playStoreApps)
       }
 
-      const results  = await Promise.all(promises)
-      const allApps  = results.flat()
-
-      // Deduplicate by name (same app can appear in both stores)
+      // Preserve the same app on each store because its reviews differ by platform.
       const seen = new Set<string>()
-      const unique = allApps.filter(a => {
-        const key = a.name.toLowerCase()
+      const unique = candidates.filter(app => {
+        const key = `${app.store}:${app.id}`
         if (seen.has(key)) return false
         seen.add(key)
         return true
       })
 
-      setApps(unique.slice(0, 8))
+      setSelectedApps([])
+      setApps(unique.slice(0, 5))
       setStep('select')
     } catch {
       setError('Could not find apps. Try a different search term.')

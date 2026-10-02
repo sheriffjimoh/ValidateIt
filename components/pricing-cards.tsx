@@ -114,7 +114,7 @@ export default function PricingCards() {
                 ✓ Unlimited market-gap analyses
               </li>
               <li className="flex items-center gap-2">
-                ✓ Compare up to 8 competitor apps per search
+                ✓ Compare up to 5 competitor apps per search across both stores
               </li>
               <li className="flex items-center gap-2">
                 ✓ AI dev spec & PRD generator
