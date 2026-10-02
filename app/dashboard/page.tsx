@@ -9,6 +9,18 @@ import { jsPDF } from 'jspdf'
 
 type StoreOption = 'appstore' | 'playstore' | 'both'
 
+async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init)
+  const contentType = response.headers.get('content-type') || ''
+  if (!contentType.includes('application/json')) {
+    throw new Error(`The server returned an unexpected response (${response.status}). Please try again.`)
+  }
+
+  const data = await response.json() as T & { error?: string }
+  if (!response.ok || data.error) throw new Error(data.error || `Request failed (${response.status}).`)
+  return data
+}
+
 export default function ValidatePage() {
   const router   = useRouter()
   const [supabase] = useState(() => createClient())
@@ -52,13 +64,11 @@ export default function ValidatePage() {
 
     try {
       const appStoreRequest = store === 'appstore' || store === 'both'
-        ? fetch(`/api/search-apps?q=${encodeURIComponent(q)}`)
-            .then(response => response.json())
+        ? requestJson<{ apps?: App[] }>(`/api/search-apps?q=${encodeURIComponent(q)}`)
             .then(data => (data.apps || []).map((app: App) => ({ ...app, store: 'appstore' as const })))
         : Promise.resolve([] as App[])
       const playStoreRequest = store === 'playstore' || store === 'both'
-        ? fetch(`/api/search-playstore?q=${encodeURIComponent(q)}`)
-            .then(response => response.json())
+        ? requestJson<{ apps?: App[] }>(`/api/search-playstore?q=${encodeURIComponent(q)}`)
             .then(data => (data.apps || []).map((app: App) => ({ ...app, store: 'playstore' as const })))
         : Promise.resolve([] as App[])
 
@@ -120,7 +130,7 @@ export default function ValidatePage() {
           const endpoint = app.store === 'playstore'
             ? `/api/fetch-playstore?appId=${app.id}`
             : `/api/fetch-reviews?appId=${app.id}`
-          return fetch(endpoint).then(r => r.json())
+          return requestJson<{ reviews?: Array<{ rating: string | number; title?: string; content?: string }>; total?: number }>(endpoint)
         })
       )
 
@@ -130,13 +140,11 @@ export default function ValidatePage() {
 
       if (allReviews.length === 0) throw new Error('No reviews found. Try different apps.')
 
-      const res = await fetch('/api/analyse', {
+      const data = await requestJson<{ analysis: Analysis }>('/api/analyse', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ market, apps: selectedApps, reviews: allReviews }),
       })
-      const data = await res.json()
-      if (data.error) throw new Error(data.error)
 
       setAnalysis(data.analysis)
       setStep('results')
@@ -368,6 +376,12 @@ export default function ValidatePage() {
       {/* ── STEP 2: SELECT ── */}
       {step === 'select' && (
         <div className="max-w-2xl">
+          <button
+            onClick={() => { setStep('search'); setSelectedApps([]); setError('') }}
+            className="mb-5 text-sm font-semibold text-ink/55 hover:text-ink bg-transparent border-0 cursor-pointer"
+          >
+            ← Back to search
+          </button>
           <h2 className="font-serif text-3xl font-black text-ink mb-2">Pick competitors</h2>
           <p className="text-sm text-ink/55 font-light mb-8">
             Select up to {Math.min(appSelectionLimit, apps.length)} apps for <strong>&quot;{market}&quot;</strong>. We&apos;ll read their 1★ and 2★ reviews.
@@ -453,6 +467,12 @@ export default function ValidatePage() {
       {/* ── STEP 4: RESULTS ── */}
       {step === 'results' && analysis && (
         <div className="space-y-6 max-w-2xl">
+          <button
+            onClick={() => { setStep('select'); setError('') }}
+            className="text-sm font-semibold text-ink/55 hover:text-ink bg-transparent border-0 cursor-pointer"
+          >
+            ← Back to apps
+          </button>
           <div className="bg-white p-6 rounded-2xl border border-ink/10 shadow-sm">
             <p className="text-xs font-mono text-ink/35 mb-3">
               {selectedApps.length} apps · {reviewCount.toLocaleString()} reviews scanned ·

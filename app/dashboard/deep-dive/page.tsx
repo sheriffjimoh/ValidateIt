@@ -40,6 +40,18 @@ type Analysis = {
 
 type Step = 'search' | 'select' | 'analyse' | 'results'
 
+async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init)
+  const contentType = response.headers.get('content-type') || ''
+  if (!contentType.includes('application/json')) {
+    throw new Error(`The server returned an unexpected response (${response.status}). Please try again.`)
+  }
+
+  const data = await response.json() as T & { error?: string }
+  if (!response.ok || data.error) throw new Error(data.error || `Request failed (${response.status}).`)
+  return data
+}
+
 export default function DeepDivePage() {
   const [step, setStep]         = useState<Step>('search')
   const [query, setQuery]       = useState('')
@@ -83,14 +95,11 @@ export default function DeepDivePage() {
         ? `/api/search-apps?q=${encodeURIComponent(query)}`
         : `/api/search-playstore?q=${encodeURIComponent(query)}`
 
-      const res  = await fetch(endpoint)
-      const data = await res.json()
-
-      if (data.error) throw new Error(data.error)
+      const data = await requestJson<{ apps: AppResult[] }>(endpoint)
       setApps(data.apps)
       setStep('select')
-    } catch {
-      setError('Could not find apps. Try a different search term.')
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not find apps. Try a different search term.')
     } finally {
       setLoading(false)
     }
@@ -112,10 +121,9 @@ export default function DeepDivePage() {
       // Fetch reviews
       const endpoint = store === 'appstore'
         ? `/api/fetch-reviews?appId=${app.id}`
-        : `/api/fetch-playstore-reviews?appId=${app.id}`
+        : `/api/fetch-playstore?appId=${app.id}`
 
-      const reviewRes  = await fetch(endpoint)
-      const reviewData = await reviewRes.json()
+      const reviewData = await requestJson<{ reviews?: Array<{ rating: string | number; title?: string; content?: string }> }>(endpoint)
       const reviews    = reviewData.reviews || []
 
       if (reviews.length === 0) {
@@ -123,7 +131,7 @@ export default function DeepDivePage() {
       }
 
       // Run deep dive analysis
-      const res = await fetch('/api/deep-dive', {
+      const data = await requestJson<{ analysis: Analysis }>('/api/deep-dive', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
@@ -133,9 +141,6 @@ export default function DeepDivePage() {
           reviews,
         }),
       })
-
-      const data = await res.json()
-      if (!res.ok || data.error) throw new Error(data.error || 'Analysis failed.')
 
       setAnalysis(data.analysis)
       if (!hasActivePro) {
@@ -296,6 +301,12 @@ export default function DeepDivePage() {
         {/* Step 2 — Select one app */}
         {step === 'select' && (
           <div className="max-w-xl">
+            <button
+              onClick={() => { setStep('search'); setError('') }}
+              className="mb-5 text-sm font-semibold text-ink/55 hover:text-ink bg-transparent border-0 cursor-pointer"
+            >
+              ← Back to search
+            </button>
             <p className="text-[12px] text-ink/30 uppercase tracking-widest font-mono mb-6">
               Select the app to analyse
             </p>
@@ -446,6 +457,14 @@ export default function DeepDivePage() {
 
             {/* Actions */}
             <div className="flex gap-3 flex-wrap">
+              <button
+                onClick={() => { setStep('select'); setError('') }}
+                className="bg-transparent text-ink/50 border border-ink/15
+                  px-6 py-3.5 text-[14px] rounded-lg cursor-pointer font-sans
+                  hover:border-ink/30 hover:text-ink/70 transition-all"
+              >
+                ← Back to apps
+              </button>
               <button
                 onClick={reset}
                 className="bg-lime text-ink px-6 py-3.5 text-[14px] font-bold

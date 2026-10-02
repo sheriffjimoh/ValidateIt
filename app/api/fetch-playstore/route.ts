@@ -12,8 +12,8 @@ export async function GET(request: Request) {
   try {
     const { data: fetchedReviews } = await gplay.reviews({
       appId,
-      sort: 2 as Parameters<typeof gplay.reviews>[0]['sort'],
-      num: 200,
+      sort: 3 as Parameters<typeof gplay.reviews>[0]['sort'],
+      num: 1000,
       lang: 'en',
       country: 'us',
     })
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
       }))
 
     return NextResponse.json({
-      total:      complaints.length,
+      total:      fetchedReviews.length,
       complaints: complaints.length,
       reviews:    complaints,
     })
