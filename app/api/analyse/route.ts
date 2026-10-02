@@ -99,10 +99,17 @@ Analyse these reviews and return a JSON response with this exact structure:
       "mentions": <estimated number of reviews mentioning this>,
       "opportunity": "Critical" | "High" | "Medium"
     }
+  ],
+  "opportunities": [
+    {
+      "title": "Specific product strategy to outperform competitors",
+      "description": "Concrete action tied to repeated review complaints and unmet user needs"
+    }
   ]
 }
 
 Return exactly 5 gaps, ranked by frequency and severity.
+Return exactly 3 actionable opportunities. Each should explain how a new or competing app can address the identified complaints better than existing apps.
 Return ONLY the JSON. No markdown, no explanation, no backticks.
 `
 

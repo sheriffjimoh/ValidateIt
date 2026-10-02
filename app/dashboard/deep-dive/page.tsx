@@ -1,8 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { jsPDF } from 'jspdf'
+import { createClient } from '@/lib/supabase/client'
+import { isActivePro } from '@/lib/utils'
+import type { Profile } from '../type'
 
 type AppResult = {
   id: string
@@ -45,6 +49,28 @@ export default function DeepDivePage() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
+  const [supabase] = useState(() => createClient())
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
+
+  const hasActivePro = isActivePro(profile)
+  const deepDiveLimit = profile?.deep_dive_limit ?? 2
+  const deepDiveUsed = profile?.deep_dive_used ?? 0
+  const freeDeepDivesRemaining = Math.max(deepDiveLimit - deepDiveUsed, 0)
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+        if (data) setProfile(data as Profile)
+      } finally {
+        setProfileLoading(false)
+      }
+    }
+    loadProfile()
+  }, [supabase])
 
   const searchApps = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -71,6 +97,12 @@ export default function DeepDivePage() {
   }
 
   const runDeepDive = async (app: AppResult) => {
+    if (profileLoading) return
+    if (!hasActivePro && freeDeepDivesRemaining <= 0) {
+      setError('You have used your free Deep Dive analyses. Upgrade to Pro for unlimited Deep Dives.')
+      return
+    }
+
     setSelected(app)
     setLoading(true)
     setError('')
@@ -103,12 +135,18 @@ export default function DeepDivePage() {
       })
 
       const data = await res.json()
-      if (data.error) throw new Error(data.error)
+      if (!res.ok || data.error) throw new Error(data.error || 'Analysis failed.')
 
       setAnalysis(data.analysis)
+      if (!hasActivePro) {
+        setProfile(current => current ? {
+          ...current,
+          deep_dive_used: (current.deep_dive_used ?? 0) + 1,
+        } : current)
+      }
       setStep('results')
-    } catch (err: any) {
-      setError(err.message || 'Analysis failed.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Analysis failed.')
       setStep('select')
     } finally {
       setLoading(false)
@@ -116,7 +154,7 @@ export default function DeepDivePage() {
   }
 
   const downloadPDF = () => {
-    if (!analysis) return
+    if (!analysis || !hasActivePro) return
     const doc = new jsPDF()
 
     // Title
@@ -206,7 +244,7 @@ export default function DeepDivePage() {
             </h1>
             <p className="text-[15px] text-ink/50 font-light mb-10">
               Search for a competitor app. We read all their worst reviews
-              and tell you exactly where they're failing.
+              and tell you exactly where they&apos;re failing.
             </p>
 
             {/* Store toggle */}
@@ -265,17 +303,30 @@ export default function DeepDivePage() {
               Pick your target
             </h2>
             <p className="text-[14px] text-ink/50 font-light mb-8">
-              We'll read all their 1 and 2 star reviews and find every weakness.
+              We&apos;ll read all their 1 and 2 star reviews and find every weakness.
             </p>
+            <p className="text-sm text-ink/55 mb-6">
+              {profileLoading
+                ? 'Checking your plan...'
+                : hasActivePro
+                  ? 'Pro includes unlimited Deep Dives.'
+                  : `${freeDeepDivesRemaining} of ${deepDiveLimit} free Deep Dives remaining.`}
+            </p>
+            {!profileLoading && !hasActivePro && freeDeepDivesRemaining <= 0 && (
+              <p className="text-sm text-ink/60 mb-6">
+                Free Deep Dives are used up. <Link href="/dashboard/plan" className="font-semibold underline underline-offset-4">Upgrade to Pro</Link> for unlimited analyses.
+              </p>
+            )}
 
             <div className="flex flex-col gap-2">
               {apps.map(app => (
                 <button
                   key={app.id}
                   onClick={() => runDeepDive(app)}
+                  disabled={profileLoading || loading || (!hasActivePro && freeDeepDivesRemaining <= 0)}
                   className="flex items-center gap-4 p-4 rounded-xl border
-                    border-ink/[0.08] bg-white text-left w-full cursor-pointer
-                    font-sans hover:border-ink/20 transition-all"
+                    border-ink/8 bg-white text-left w-full cursor-pointer
+                    font-sans hover:border-ink/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {app.icon && (
                     <img src={app.icon} alt={app.name}
@@ -402,14 +453,25 @@ export default function DeepDivePage() {
               >
                 Analyse another app
               </button>
-              <button
-                onClick={downloadPDF}
-                className="bg-transparent text-ink/50 border border-ink/15
-                  px-6 py-3.5 text-[14px] rounded-lg cursor-pointer font-sans
-                  hover:border-ink/30 hover:text-ink/70 transition-all"
-              >
-                ↓ Download PDF
-              </button>
+              {hasActivePro ? (
+                <button
+                  onClick={downloadPDF}
+                  className="bg-transparent text-ink/50 border border-ink/15
+                    px-6 py-3.5 text-[14px] rounded-lg cursor-pointer font-sans
+                    hover:border-ink/30 hover:text-ink/70 transition-all"
+                >
+                  ↓ Download PDF
+                </button>
+              ) : (
+                <Link
+                  href="/dashboard/plan"
+                  className="bg-transparent text-ink/50 border border-ink/15
+                    px-6 py-3.5 text-[14px] rounded-lg no-underline font-sans
+                    hover:border-ink/30 hover:text-ink/70 transition-all"
+                >
+                  Upgrade to Pro for PDF export
+                </Link>
+              )}
               <Link
                 href="/tool"
                 className="bg-transparent text-ink/50 border border-ink/15

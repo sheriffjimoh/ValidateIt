@@ -10,6 +10,10 @@ export type Gap = {
 export type Analysis = {
   summary: string
   gaps: Gap[]
+  opportunities: {
+    title: string
+    description: string
+  }[]
 }
 
 export type SavedReport = {

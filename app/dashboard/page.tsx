@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { isActivePro } from '@/lib/utils'
 import { Analysis, App, Profile } from './type'
+import { jsPDF } from 'jspdf'
 
 type StoreOption = 'appstore' | 'playstore' | 'both'
 
@@ -13,6 +14,7 @@ export default function ValidatePage() {
   const [supabase] = useState(() => createClient())
 
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
   const [step, setStep]       = useState<'search' | 'select' | 'analyse' | 'results'>('search')
   const [market, setMarket]   = useState('')
   const [store, setStore]     = useState<StoreOption>('both')
@@ -28,10 +30,14 @@ export default function ValidatePage() {
 
   useEffect(() => {
     const loadProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
-      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-      if (data) setProfile(data as Profile)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { router.push('/login'); return }
+        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+        if (data) setProfile(data as Profile)
+      } finally {
+        setProfileLoading(false)
+      }
     }
     loadProfile()
   }, [router, supabase])
@@ -174,6 +180,71 @@ export default function ValidatePage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const downloadPDF = () => {
+    if (!analysis || !isActivePro(profile)) return
+
+    const doc = new jsPDF()
+    const left = 20
+    const width = 170
+    let y = 20
+
+    const ensureSpace = (height: number) => {
+      if (y + height > 280) {
+        doc.addPage()
+        y = 20
+      }
+    }
+
+    const addHeading = (text: string) => {
+      ensureSpace(12)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(13)
+      doc.text(text, left, y)
+      y += 8
+    }
+
+    const addParagraph = (text: string, bold = false) => {
+      doc.setFont('helvetica', bold ? 'bold' : 'normal')
+      doc.setFontSize(10)
+      const lines = doc.splitTextToSize(text, width) as string[]
+      lines.forEach(line => {
+        ensureSpace(6)
+        doc.text(line, left, y)
+        y += 5
+      })
+      y += 2
+    }
+
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(20)
+    const titleLines = doc.splitTextToSize(`Market Validation: ${market}`, width) as string[]
+    doc.text(titleLines, left, y)
+    y += titleLines.length * 8 + 4
+
+    addParagraph(`Apps analysed: ${selectedApps.map(app => app.name).join(', ')}`)
+    addParagraph(`Reviews scanned: ${reviewCount.toLocaleString()} | Report date: ${new Date().toLocaleDateString()}`)
+
+    addHeading('Market Summary')
+    addParagraph(analysis.summary)
+
+    addHeading('Top Market Gaps')
+    analysis.gaps.forEach(gap => {
+      addParagraph(`${gap.rank}. ${gap.complaint} [${gap.opportunity}] (~${gap.mentions} mentions)`, true)
+      addParagraph(gap.detail)
+    })
+
+    if (analysis.opportunities?.length) {
+      addHeading('How to Beat Them')
+      analysis.opportunities.forEach((opportunity, index) => {
+        addParagraph(`${index + 1}. ${opportunity.title}`, true)
+        addParagraph(opportunity.description)
+      })
+    }
+
+    const filename = market.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    doc.save(`validateit-market-report-${filename || 'results'}.pdf`)
+  }
+
   const reset = () => {
     setStep('search')
     setMarket('')
@@ -251,7 +322,7 @@ export default function ValidatePage() {
               </button>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            {/* <div className="flex flex-wrap gap-2">
               {['invoicing for freelancers', 'meditation for anxiety', 'language learning app', 'habit tracker'].map(ex => (
                 <button
                   key={ex}
@@ -263,13 +334,13 @@ export default function ValidatePage() {
                   {ex}
                 </button>
               ))}
-            </div>
+            </div> */}
           </form>
 
           {error && <p className="text-red-500 text-xs mt-4">{error}</p>}
 
           {/* Quota warning */}
-          {!isActivePro(profile) && (
+          {!profileLoading && !isActivePro(profile) && (
             <div className="mt-8 bg-white border border-ink/10 rounded-xl p-4 flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold text-ink">
@@ -390,7 +461,7 @@ export default function ValidatePage() {
             <p className="text-sm text-ink/65 leading-relaxed font-light">{analysis.summary}</p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-ink/10 shadow-sm overflow-hidden divide-y divide-ink/[0.06]">
+          <div className="bg-white rounded-2xl border border-ink/10 shadow-sm overflow-hidden divide-y divide-ink/6">
             {analysis.gaps.map(gap => (
               <div key={gap.rank} className="p-6 flex items-start gap-4">
                 <span className="font-mono text-sm font-bold text-ink/25 w-5 pt-0.5 shrink-0">{gap.rank}</span>
@@ -413,6 +484,22 @@ export default function ValidatePage() {
             ))}
           </div>
 
+          {analysis.opportunities?.length > 0 && (
+            <section aria-labelledby="validation-opportunities-heading">
+              <h3 id="validation-opportunities-heading" className="text-xs font-mono uppercase tracking-wider text-ink/45 mb-3">
+                How to beat them
+              </h3>
+              <div className="space-y-3">
+                {analysis.opportunities.map((opportunity, index) => (
+                  <article key={`${opportunity.title}-${index}`} className="bg-white p-5 rounded-xl border border-ink/10">
+                    <h4 className="text-sm font-semibold text-ink mb-1">{opportunity.title}</h4>
+                    <p className="text-sm text-ink/60 leading-relaxed">{opportunity.description}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={saveReport}
@@ -429,10 +516,27 @@ export default function ValidatePage() {
             >
               {copied ? '✓ Copied' : 'Copy report'}
             </button>
+            {isActivePro(profile) ? (
+              <button
+                onClick={downloadPDF}
+                className="flex-1 bg-white text-ink border border-ink/15 font-bold px-6 py-3.5
+                  rounded-xl text-sm hover:border-ink/30 transition-all cursor-pointer font-sans"
+              >
+                Export full report PDF
+              </button>
+            ) : (
+              <a
+                href="/dashboard/plan"
+                className="flex-1 text-center bg-white text-ink border border-ink/15 font-bold px-6 py-3.5
+                  rounded-xl text-sm hover:border-ink/30 transition-all font-sans"
+              >
+                Unlock PDF export with Pro
+              </a>
+            )}
             <button
               onClick={reset}
-              className="flex-1 bg-lime text-ink border border-ink/15 font-bold px-6 py-3.5
-                rounded-xl text-sm hover:opacity-90 transition-all cursor-pointer border-0 font-sans"
+              className="flex-1 bg-lime text-ink border-ink/15 font-bold px-6 py-3.5
+                rounded-xl text-sm hover:opacity-90 transition-all cursor-pointer font-sans"
             >
               New search
             </button>

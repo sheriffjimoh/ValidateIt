@@ -10,36 +10,21 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Fetch 1 and 2 star reviews from Play Store.
-    // The library's typings are out of date with the runtime API, so we cast
-    // the request options to any to satisfy TypeScript without changing behavior.
-    const fetchReviewsByStar = (star: number) =>
-      gplay.reviews({
-        appId,
-        sort: 'NEWEST' as any,
-        num: 200,
-        star,
-        lang: 'en',
-        country: 'us',
-      } as any)
+    const { data: fetchedReviews } = await gplay.reviews({
+      appId,
+      sort: 2 as Parameters<typeof gplay.reviews>[0]['sort'],
+      num: 200,
+      lang: 'en',
+      country: 'us',
+    })
 
-    const [oneStars, twoStars] = await Promise.all([
-      fetchReviewsByStar(1),
-      fetchReviewsByStar(2),
-    ])
-
-    const complaints = [
-      ...oneStars.data.map((r: any) => ({
-        rating:  '1',
-        title:   r.title || '',
-        content: r.text  || '',
-      })),
-      ...twoStars.data.map((r: any) => ({
-        rating:  '2',
-        title:   r.title || '',
-        content: r.text  || '',
-      })),
-    ]
+    const complaints = fetchedReviews
+      .filter(review => review.score === 1 || review.score === 2)
+      .map(review => ({
+        rating: String(review.score),
+        title: review.title || '',
+        content: review.text || '',
+      }))
 
     return NextResponse.json({
       total:      complaints.length,
@@ -47,8 +32,8 @@ export async function GET(request: Request) {
       reviews:    complaints,
     })
 
-  } catch (err: any) {
-    console.error('[playstore]', err.message)
+  } catch (err: unknown) {
+    console.error('[playstore]', err instanceof Error ? err.message : err)
     return NextResponse.json({ error: 'Failed to fetch Play Store reviews' }, { status: 500 })
   }
 }

@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { isActivePro } from '@/lib/utils'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
@@ -10,16 +13,22 @@ const MODELS = [
   'gemini-3.6-flash',
 ]
 
+type DeepDiveReview = {
+  rating: string | number
+  title?: string | null
+  content?: string | null
+}
+
 async function generateWithFallback(prompt: string): Promise<string> {
-  let lastError: any
+  let lastError: unknown
   for (const modelName of MODELS) {
     const model = genAI.getGenerativeModel({ model: modelName })
     try {
       const result = await model.generateContent(prompt)
       return result.response.text().trim()
-    } catch (err: any) {
-      lastError = err
-      const msg = err?.message || ''
+    } catch (error) {
+      lastError = error
+      const msg = error instanceof Error ? error.message : String(error)
       if (msg.includes('503') || msg.includes('high demand')) {
         await new Promise(r => setTimeout(r, 2000))
       }
@@ -31,15 +40,45 @@ async function generateWithFallback(prompt: string): Promise<string> {
 
 export async function POST(request: Request) {
   try {
-    const { appName, appId, store, reviews } = await request.json()
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Sign in to use Deep Dive.' }, { status: 401 })
 
-    if (!appName || !reviews || reviews.length === 0) {
+    const admin = createAdminClient()
+    const { data: profile, error: profileError } = await admin
+      .from('profiles')
+      .select('plan_type, subscription_status, subscription_expires_at, deep_dive_used, deep_dive_limit')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || !profile) {
+      return NextResponse.json({ error: 'Could not load your plan and Deep Dive usage.' }, { status: 500 })
+    }
+
+    const hasActivePro = isActivePro(profile)
+    const deepDiveLimit = profile.deep_dive_limit ?? 2
+    const deepDiveUsed = profile.deep_dive_used ?? 0
+
+    if (!hasActivePro && deepDiveUsed >= deepDiveLimit) {
+      return NextResponse.json({
+        error: 'You have used your free Deep Dive analyses. Upgrade to Pro for unlimited Deep Dives.',
+        used: deepDiveUsed,
+        limit: deepDiveLimit,
+      }, { status: 403 })
+    }
+
+    const { appName, reviews } = await request.json() as {
+      appName?: string
+      reviews?: DeepDiveReview[]
+    }
+
+    if (!appName || !reviews?.length) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 })
     }
 
     const reviewText = reviews
       .slice(0, 200)
-      .map((r: any) => `[${r.rating}★] ${r.title}: ${r.content}`)
+      .map(review => `[${review.rating}★] ${review.title || ''}: ${review.content || ''}`)
       .join('\n')
 
     const prompt = `
@@ -78,10 +117,49 @@ Return ONLY the JSON. No markdown, no explanation, no backticks.
     const cleaned  = text.replace(/```json|```/g, '').trim()
     const analysis = JSON.parse(cleaned)
 
+    if (!hasActivePro) {
+      let usageRecorded = false
+
+      for (let attempt = 0; attempt < 3 && !usageRecorded; attempt += 1) {
+        const { data: latestProfile, error: latestProfileError } = await admin
+          .from('profiles')
+          .select('deep_dive_used, deep_dive_limit')
+          .eq('id', user.id)
+          .single()
+
+        if (latestProfileError || !latestProfile) throw new Error('Could not record Deep Dive usage')
+
+        const currentUsed = latestProfile.deep_dive_used ?? 0
+        const currentLimit = latestProfile.deep_dive_limit ?? 2
+        if (currentUsed >= currentLimit) {
+          return NextResponse.json({
+            error: 'You have used your free Deep Dive analyses. Upgrade to Pro for unlimited Deep Dives.',
+            used: currentUsed,
+            limit: currentLimit,
+          }, { status: 403 })
+        }
+
+        const update = admin
+          .from('profiles')
+          .update({ deep_dive_used: currentUsed + 1 })
+          .eq('id', user.id)
+        const { data: updatedUsage, error: usageError } = latestProfile.deep_dive_used == null
+          ? await update.is('deep_dive_used', null).select('deep_dive_used').maybeSingle()
+          : await update.eq('deep_dive_used', currentUsed).select('deep_dive_used').maybeSingle()
+
+        if (usageError) throw new Error('Could not record Deep Dive usage')
+        usageRecorded = Boolean(updatedUsage)
+      }
+
+      if (!usageRecorded) {
+        return NextResponse.json({ error: 'Could not confirm your Deep Dive usage. Please retry.' }, { status: 409 })
+      }
+    }
+
     return NextResponse.json({ analysis })
 
-  } catch (err: any) {
-    console.error('[deep-dive]', err.message)
+  } catch (err: unknown) {
+    console.error('[deep-dive]', err instanceof Error ? err.message : err)
     return NextResponse.json({ error: 'Deep dive failed' }, { status: 500 })
   }
 }
