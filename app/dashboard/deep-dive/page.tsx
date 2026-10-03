@@ -66,7 +66,7 @@ export default function DeepDivePage() {
   const [profileLoading, setProfileLoading] = useState(true)
 
   const hasActivePro = isActivePro(profile)
-  const deepDiveLimit = profile?.deep_dive_limit ?? 2
+  const deepDiveLimit = hasActivePro ? 99 : (profile?.deep_dive_limit ?? 2)
   const deepDiveUsed = profile?.deep_dive_used ?? 0
   const freeDeepDivesRemaining = Math.max(deepDiveLimit - deepDiveUsed, 0)
 

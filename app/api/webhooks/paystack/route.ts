@@ -54,6 +54,7 @@ export async function POST(request: Request) {
           ? supabase.from('profiles').update({
               plan_type:                  'pro',
               credits_limit:              999,
+              deep_dive_limit:            99,
               subscription_status:        'active',
               subscription_expires_at:    expiresAt.toISOString(),
               paystack_customer_code:     data.customer?.customer_code,
@@ -62,6 +63,7 @@ export async function POST(request: Request) {
           : supabase.from('profiles').update({
               plan_type:               'pro',
               credits_limit:           999,
+              deep_dive_limit:         99,
               subscription_status:     'active',
               subscription_expires_at: expiresAt.toISOString(),
             }).eq('email', email)

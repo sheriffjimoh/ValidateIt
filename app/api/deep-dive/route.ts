@@ -116,53 +116,57 @@ Return ONLY the JSON. No markdown, no explanation, no backticks.
     const text     = await generateWithFallback(prompt)
     const cleaned  = text.replace(/```json|```/g, '').trim()
     const analysis = JSON.parse(cleaned)
-    let deepDiveUsedAfter = deepDiveUsed
+    let updatedUsageCount: number | null = null
+    let updatedLimit = deepDiveLimit
 
-    if (!hasActivePro) {
-      let updatedUsageCount: number | null = null
+    for (let attempt = 0; attempt < 3 && updatedUsageCount === null; attempt += 1) {
+      const { data: latestProfile, error: latestProfileError } = await admin
+        .from('profiles')
+        .select('deep_dive_used, deep_dive_limit')
+        .eq('id', user.id)
+        .single()
 
-      for (let attempt = 0; attempt < 3 && updatedUsageCount === null; attempt += 1) {
-        const { data: latestProfile, error: latestProfileError } = await admin
-          .from('profiles')
-          .select('deep_dive_used, deep_dive_limit')
-          .eq('id', user.id)
-          .single()
+      if (latestProfileError || !latestProfile) throw new Error('Could not record Deep Dive usage')
 
-        if (latestProfileError || !latestProfile) throw new Error('Could not record Deep Dive usage')
-
-        const currentUsed = latestProfile.deep_dive_used ?? 0
-        const currentLimit = latestProfile.deep_dive_limit ?? 2
-        if (currentUsed >= currentLimit) {
-          return NextResponse.json({
-            error: 'You have used your free Deep Dive analyses. Upgrade to Pro for unlimited Deep Dives.',
-            used: currentUsed,
-            limit: currentLimit,
-          }, { status: 403 })
-        }
-
-        const update = admin
-          .from('profiles')
-          .update({ deep_dive_used: currentUsed + 1 })
-          .eq('id', user.id)
-        const { data: updatedUsage, error: usageError } = latestProfile.deep_dive_used == null
-          ? await update.is('deep_dive_used', null).select('deep_dive_used').maybeSingle()
-          : await update.eq('deep_dive_used', currentUsed).select('deep_dive_used').maybeSingle()
-
-        if (usageError) throw new Error('Could not record Deep Dive usage')
-        if (updatedUsage) updatedUsageCount = updatedUsage.deep_dive_used
+      const currentUsed = latestProfile.deep_dive_used ?? 0
+      const currentLimit = hasActivePro ? 99 : (latestProfile.deep_dive_limit ?? 2)
+      if (!hasActivePro && currentUsed >= currentLimit) {
+        return NextResponse.json({
+          error: 'You have used your free Deep Dive analyses. Upgrade to Pro for unlimited Deep Dives.',
+          used: currentUsed,
+          limit: currentLimit,
+        }, { status: 403 })
       }
 
-      if (updatedUsageCount === null) {
-        return NextResponse.json({ error: 'Could not confirm your Deep Dive usage. Please retry.' }, { status: 409 })
-      }
+      const update = admin
+        .from('profiles')
+        .update({
+          deep_dive_used: currentUsed + 1,
+          deep_dive_limit: currentLimit,
+        })
+        .eq('id', user.id)
+      const { data: updatedUsage, error: usageError } = latestProfile.deep_dive_used == null
+        ? await update.is('deep_dive_used', null).select('deep_dive_used, deep_dive_limit').maybeSingle()
+        : await update.eq('deep_dive_used', currentUsed).select('deep_dive_used, deep_dive_limit').maybeSingle()
 
-      deepDiveUsedAfter = updatedUsageCount
+      if (usageError) {
+        console.error('[deep-dive] failed to persist usage:', usageError)
+        throw new Error('Could not record Deep Dive usage')
+      }
+      if (updatedUsage) {
+        updatedUsageCount = updatedUsage.deep_dive_used
+        updatedLimit = updatedUsage.deep_dive_limit
+      }
+    }
+
+    if (updatedUsageCount === null) {
+      return NextResponse.json({ error: 'Could not confirm your Deep Dive usage. Please retry.' }, { status: 409 })
     }
 
     return NextResponse.json({
       analysis,
-      deepDiveUsed: deepDiveUsedAfter,
-      deepDiveLimit,
+      deepDiveUsed: updatedUsageCount,
+      deepDiveLimit: updatedLimit,
     })
 
   } catch (err: unknown) {

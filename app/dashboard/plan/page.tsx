@@ -119,8 +119,8 @@ export default function PlanPage() {
   const quotaLimit   = profile?.credits_limit   ?? 3
   const quotaPercent = Math.min((quotaUsed / quotaLimit) * 100, 100)
   const ddUsed       = profile?.deep_dive_used  ?? 0
-  const ddLimit      = profile?.deep_dive_limit ?? 2
   const hasActivePlan = isActivePro(profile)
+  const ddLimit      = hasActivePlan ? 99 : (profile?.deep_dive_limit ?? 2)
   const normalizedBillingStatus = subscriptionDetails?.status.toLowerCase().replace(/[_ ]/g, '-')
   const isNonRenewing = normalizedBillingStatus === 'non-renewing' || normalizedBillingStatus === 'nonrenewing'
   const unavailableLabel = subscriptionDetailsLoading ? 'Loading...' : 'Unavailable'
