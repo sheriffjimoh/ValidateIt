@@ -1,11 +1,46 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import HomeHeader from '@/components/home-header'
 import { GAPS } from '@/lib/utils'
 
+export const metadata: Metadata = {
+  title: 'Validate App Ideas with Competitor Reviews',
+  description:
+    'Validate your app idea with AI analysis of competitor reviews from the Apple App Store and Google Play. Discover customer pain points, rank market gaps, and find what to build next.',
+  alternates: { canonical: '/' },
+  openGraph: {
+    title: 'Validate App Ideas with Competitor Reviews | ValidateIt',
+    description:
+      'Discover product opportunities in App Store and Google Play reviews. Turn customer complaints into an evidence-backed roadmap.',
+    url: 'https://validateit.site/',
+    type: 'website',
+  },
+}
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'ValidateIt',
+  url: 'https://validateit.site/',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  description:
+    'AI-powered market validation that analyzes competitor feedback from the Apple App Store and Google Play to identify customer pain points and product opportunities.',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+    description: 'Free plan available; Pro subscription available for expanded research and exports.',
+  },
+}
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-paper font-sans">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }}
+      />
 
       {/* ── NAV ── */}
        <HomeHeader />
@@ -18,7 +53,7 @@ export default function Home() {
         </h1>
 
         <p className="mx-auto mb-8 max-w-md text-[16px] font-light leading-relaxed text-ink/60">
-          ValidateIt mines competitor 1-star & 2-star App Store reviews and surfaces the gaps users keep complaining about.
+          ValidateIt analyzes competitor 1-star and 2-star reviews from the Apple App Store and Google Play to reveal the product gaps users keep complaining about.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-3">
@@ -36,7 +71,7 @@ export default function Home() {
       <section className="mx-auto mb-20 max-w-2xl px-6">
         <div className="overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-[0_8px_40px_rgba(0,0,0,0.07)]">
           {/* fake browser chrome */}
-          <div className="flex items-center gap-1.5 border-b border-ink/[0.06] bg-[#F7F7F7] px-4 py-3">
+          <div className="flex items-center gap-1.5 border-b border-ink/6 bg-[#F7F7F7] px-4 py-3">
             <span className="h-2.5 w-2.5 rounded-full bg-[#FF6B6B]" />
             <span className="h-2.5 w-2.5 rounded-full bg-[#FFCA3A]" />
             <span className="h-2.5 w-2.5 rounded-full bg-[#6BCB77]" />
@@ -44,7 +79,7 @@ export default function Home() {
           </div>
 
           {/* report header */}
-          <div className="flex items-center justify-between border-b border-ink/[0.06] px-5 py-4">
+          <div className="flex items-center justify-between border-b border-ink/6 px-5 py-4">
             <div>
               <p className="text-[13px] font-semibold text-ink">Invoicing apps for freelancers</p>
               <p className="text-[11px] text-ink/40">4 apps · 2,847 reviews analyzed</p>
@@ -56,7 +91,7 @@ export default function Home() {
 
           {/* rows */}
           {GAPS.map((g) => (
-            <div key={g.rank} className="flex items-center gap-4 border-b border-ink/[0.04] px-5 py-3.5 last:border-0">
+            <div key={g.rank} className="flex items-center gap-4 border-b border-ink/4 px-5 py-3.5 last:border-0">
               <span className="w-4 font-mono text-[11px] text-ink/25">{g.rank}</span>
               <span className={`flex-1 text-[13px] ${g.hot ? 'font-medium text-ink' : 'text-ink/45'}`}>{g.text}</span>
               <span className={`font-mono text-[11px] ${g.hot ? 'font-semibold text-ink' : 'text-ink/30'}`}>
@@ -79,10 +114,10 @@ export default function Home() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[
             { n: '01', title: 'Describe your market', body: 'Type a niche like "invoicing for freelancers" or "meditation for anxiety".' },
-            { n: '02', title: 'Pick competitors', body: 'Select up to 5 App Store apps. We fetch their 1★ and 2★ reviews.' },
+            { n: '02', title: 'Pick competitors', body: 'Select up to 5 apps across the App Store and Google Play. We analyze their 1★ and 2★ reviews.' },
             { n: '03', title: 'Build with evidence', body: 'Get a ranked AI report of the most-wanted features — sorted by frequency.' },
           ].map((s) => (
-            <div key={s.n} className="rounded-2xl border border-ink/[0.08] bg-white p-6">
+            <div key={s.n} className="rounded-2xl border border-ink/8 bg-white p-6">
               <span className="font-mono text-[10px] font-bold tracking-widest text-ink/25">{s.n}</span>
               <h3 className="mt-3 mb-2 font-serif text-[18px] font-bold text-ink">{s.title}</h3>
               <p className="text-[13px] font-light leading-relaxed text-ink/55">{s.body}</p>

@@ -1,12 +1,47 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
-  title: "ValidateIt — Competitor Review Mining & Market Gap Analysis",
+  metadataBase: new URL("https://validateit.site"),
+  title: {
+    default: "ValidateIt | AI Market Validation from App Reviews",
+    template: "%s | ValidateIt",
+  },
   description:
-    "Turn your competitors' bad reviews into your product roadmap. Mine App Store reviews with AI to build features people are begging for.",
+    "Find validated product opportunities from competitor reviews. Analyze App Store and Google Play feedback with AI, uncover market gaps, and build what users need.",
+  applicationName: "ValidateIt",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: "https://validateit.site",
+    siteName: "ValidateIt",
+    title: "ValidateIt | AI Market Validation from App Reviews",
+    description:
+      "Turn competitor reviews into product opportunities. Find market gaps with AI analysis of App Store and Google Play feedback.",
+    locale: "en_US",
+    images: [{ url: "/logo.png", width: 1600, height: 1600, alt: "ValidateIt" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "ValidateIt | AI Market Validation from App Reviews",
+    description:
+      "Analyze App Store and Google Play reviews with AI to find product opportunities users are asking for.",
+    images: ["/logo.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
 };
 
 export default function RootLayout({
