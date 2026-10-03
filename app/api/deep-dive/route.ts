@@ -116,11 +116,12 @@ Return ONLY the JSON. No markdown, no explanation, no backticks.
     const text     = await generateWithFallback(prompt)
     const cleaned  = text.replace(/```json|```/g, '').trim()
     const analysis = JSON.parse(cleaned)
+    let deepDiveUsedAfter = deepDiveUsed
 
     if (!hasActivePro) {
-      let usageRecorded = false
+      let updatedUsageCount: number | null = null
 
-      for (let attempt = 0; attempt < 3 && !usageRecorded; attempt += 1) {
+      for (let attempt = 0; attempt < 3 && updatedUsageCount === null; attempt += 1) {
         const { data: latestProfile, error: latestProfileError } = await admin
           .from('profiles')
           .select('deep_dive_used, deep_dive_limit')
@@ -148,15 +149,21 @@ Return ONLY the JSON. No markdown, no explanation, no backticks.
           : await update.eq('deep_dive_used', currentUsed).select('deep_dive_used').maybeSingle()
 
         if (usageError) throw new Error('Could not record Deep Dive usage')
-        usageRecorded = Boolean(updatedUsage)
+        if (updatedUsage) updatedUsageCount = updatedUsage.deep_dive_used
       }
 
-      if (!usageRecorded) {
+      if (updatedUsageCount === null) {
         return NextResponse.json({ error: 'Could not confirm your Deep Dive usage. Please retry.' }, { status: 409 })
       }
+
+      deepDiveUsedAfter = updatedUsageCount
     }
 
-    return NextResponse.json({ analysis })
+    return NextResponse.json({
+      analysis,
+      deepDiveUsed: deepDiveUsedAfter,
+      deepDiveLimit,
+    })
 
   } catch (err: unknown) {
     console.error('[deep-dive]', err instanceof Error ? err.message : err)

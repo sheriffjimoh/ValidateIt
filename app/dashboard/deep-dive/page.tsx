@@ -131,7 +131,7 @@ export default function DeepDivePage() {
       }
 
       // Run deep dive analysis
-      const data = await requestJson<{ analysis: Analysis }>('/api/deep-dive', {
+      const data = await requestJson<{ analysis: Analysis; deepDiveUsed?: number; deepDiveLimit?: number }>('/api/deep-dive', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
@@ -143,10 +143,11 @@ export default function DeepDivePage() {
       })
 
       setAnalysis(data.analysis)
-      if (!hasActivePro) {
+      if (!hasActivePro && typeof data.deepDiveUsed === 'number') {
         setProfile(current => current ? {
           ...current,
-          deep_dive_used: (current.deep_dive_used ?? 0) + 1,
+          deep_dive_used: data.deepDiveUsed,
+          deep_dive_limit: data.deepDiveLimit ?? current.deep_dive_limit,
         } : current)
       }
       setStep('results')
