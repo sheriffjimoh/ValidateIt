@@ -240,7 +240,7 @@ export default function DeepDivePage() {
 
         {/* Step 1 — Search */}
         {step === 'search' && (
-          <div className="max-w-xl">
+          <div className="min-w-0 max-w-xl">
             <p className="text-[12px] text-ink/30 uppercase tracking-widest font-mono mb-6">
               Competitor Deep Dive
             </p>
@@ -301,7 +301,7 @@ export default function DeepDivePage() {
 
         {/* Step 2 — Select one app */}
         {step === 'select' && (
-          <div className="max-w-xl">
+          <div className="min-w-0 max-w-xl">
             <button
               onClick={() => { setStep('search'); setError('') }}
               className="mb-5 text-sm font-semibold text-ink/55 hover:text-ink bg-transparent border-0 cursor-pointer"
@@ -386,18 +386,18 @@ export default function DeepDivePage() {
 
         {/* Step 4 — Results */}
         {step === 'results' && analysis && (
-          <div className="max-w-xl">
+          <div className="min-w-0 max-w-xl">
 
             {/* Header */}
             <div className="mb-10">
               <p className="text-[12px] text-ink/30 font-mono mb-4 uppercase tracking-widest">
                 Deep dive report
               </p>
-              <h2 className="font-serif text-[30px] font-black tracking-tight
+              <h2 className="result-text-wrap min-w-0 font-serif text-[30px] font-black tracking-tight
                 leading-tight text-ink mb-4">
                 {analysis.appName}
               </h2>
-              <p className="text-[15px] text-ink/55 font-light leading-relaxed">
+              <p className="result-text-wrap min-w-0 text-[15px] text-ink/55 font-light leading-relaxed">
                 {analysis.summary}
               </p>
             </div>
@@ -408,26 +408,25 @@ export default function DeepDivePage() {
                 font-mono mb-6">
                 Top complaints
               </p>
-              <div className="divide-y divide-ink/[0.07]">
+              <div className="min-w-0 divide-y divide-ink/[0.07]">
                 {analysis.topComplaints.map(c => (
-                  <div key={c.rank} className="py-5 flex gap-5 items-start">
+                  <div key={c.rank} className="min-w-0 py-5 grid grid-cols-[1rem_minmax(0,1fr)] sm:grid-cols-[1rem_minmax(0,1fr)_auto] gap-x-3 sm:gap-x-5 gap-y-2 items-start">
                     <span className="text-[11px] text-ink/20 font-mono pt-0.5 w-4 shrink-0">
                       {c.rank}
                     </span>
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                        <p className="text-[15px] font-medium text-ink">{c.complaint}</p>
+                        <p className="result-text-wrap min-w-0 text-[15px] font-medium text-ink">{c.complaint}</p>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded
                           ${severityStyle(c.severity)}`}>
                           {c.severity}
                         </span>
                       </div>
-                      <p className="text-[13px] text-ink/40 font-light leading-relaxed">
+                      <p className="result-text-wrap min-w-0 text-[13px] text-ink/40 font-light leading-relaxed">
                         {c.detail}
                       </p>
                     </div>
-                    <span className="text-[11px] text-ink/25 font-mono
-                      whitespace-nowrap pt-0.5 shrink-0">
+                    <span className="col-span-2 justify-self-end sm:col-span-1 text-[11px] text-ink/25 font-mono whitespace-nowrap pt-0.5">
                       ~{c.mentions}
                     </span>
                   </div>
@@ -443,12 +442,11 @@ export default function DeepDivePage() {
               </p>
               <div className="flex flex-col gap-4">
                 {analysis.opportunities.map((o, i) => (
-                  <div key={i} className="bg-white border border-ink/10
-                    rounded-xl p-5">
-                    <p className="text-[14px] font-semibold text-ink mb-1">
+                  <div key={i} className="min-w-0 max-w-full bg-white border border-ink/10 rounded-xl p-4 sm:p-5">
+                    <p className="result-text-wrap min-w-0 text-[14px] font-semibold text-ink mb-1">
                       {o.title}
                     </p>
-                    <p className="text-[13px] text-ink/50 font-light leading-relaxed">
+                    <p className="result-text-wrap min-w-0 text-[13px] text-ink/50 font-light leading-relaxed">
                       {o.description}
                     </p>
                   </div>

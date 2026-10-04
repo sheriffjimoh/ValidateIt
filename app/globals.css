@@ -19,3 +19,7 @@ html, body {
   background-color: var(--color-lime);
   color: var(--color-ink);
 }
+
+.result-text-wrap {
+  overflow-wrap: anywhere;
+}

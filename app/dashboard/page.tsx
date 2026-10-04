@@ -29,6 +29,7 @@ export default function ValidatePage() {
   const [profileLoading, setProfileLoading] = useState(true)
   const [step, setStep]       = useState<'search' | 'select' | 'analyse' | 'results'>('search')
   const [market, setMarket]   = useState('')
+  const [analysisMarket, setAnalysisMarket] = useState('')
   const [store, setStore]     = useState<StoreOption>('both')
   const [apps, setApps]       = useState<App[]>([])
   const [selectedApps, setSelectedApps] = useState<App[]>([])
@@ -57,8 +58,9 @@ export default function ValidatePage() {
   // ── Step 1: Search apps ────────────────────────────────────────────────────
   const searchApps = async (e?: React.FormEvent, customMarket?: string) => {
     if (e) e.preventDefault()
-    const q = customMarket || market
-    if (!q.trim()) return
+    const q = (customMarket || market).trim()
+    if (!q) return
+    setAnalysisMarket(q)
     setLoading(true)
     setError('')
 
@@ -143,7 +145,7 @@ export default function ValidatePage() {
       const data = await requestJson<{ analysis: Analysis }>('/api/analyse', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ market, apps: selectedApps, reviews: allReviews }),
+        body:    JSON.stringify({ market: analysisMarket, apps: selectedApps, reviews: allReviews }),
       })
 
       setAnalysis(data.analysis)
@@ -164,14 +166,14 @@ export default function ValidatePage() {
 
   // ── Save report ────────────────────────────────────────────────────────────
   const saveReport = async () => {
-    if (!analysis || !market) return
+    if (!analysis || !analysisMarket) return
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setSaving(false); return }
 
     const { error: saveError } = await supabase.from('saved_searches').insert({
       user_id:       user.id,
-      market_query:  market,
+      market_query:  analysisMarket,
       selected_apps: selectedApps,
       review_count:  reviewCount,
       analysis,
@@ -187,7 +189,7 @@ export default function ValidatePage() {
     const text = analysis.gaps
       .map(g => `${g.rank}. ${g.complaint} (~${g.mentions}) — ${g.opportunity}`)
       .join('\n')
-    navigator.clipboard.writeText(`Market gaps in "${market}":\n\n${text}`)
+    navigator.clipboard.writeText(`Market gaps in "${analysisMarket}":\n\n${text}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -229,7 +231,7 @@ export default function ValidatePage() {
 
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(20)
-    const titleLines = doc.splitTextToSize(`Market Validation: ${market}`, width) as string[]
+    const titleLines = doc.splitTextToSize(`Market Validation: ${analysisMarket}`, width) as string[]
     doc.text(titleLines, left, y)
     y += titleLines.length * 8 + 4
 
@@ -253,7 +255,7 @@ export default function ValidatePage() {
       })
     }
 
-    const filename = market.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    const filename = analysisMarket.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
     doc.save(`validateit-market-report-${filename || 'results'}.pdf`)
   }
 
@@ -384,7 +386,7 @@ export default function ValidatePage() {
           </button>
           <h2 className="font-serif text-3xl font-black text-ink mb-2">Pick competitors</h2>
           <p className="text-sm text-ink/55 font-light mb-8">
-            Select up to {Math.min(appSelectionLimit, apps.length)} apps for <strong>&quot;{market}&quot;</strong>. We&apos;ll read their 1★ and 2★ reviews.
+            Select up to {Math.min(appSelectionLimit, apps.length)} apps for <strong>&quot;{analysisMarket}&quot;</strong>. We&apos;ll read their 1★ and 2★ reviews.
           </p>
 
           <div className="space-y-2 mb-8">
@@ -466,32 +468,32 @@ export default function ValidatePage() {
 
       {/* ── STEP 4: RESULTS ── */}
       {step === 'results' && analysis && (
-        <div className="space-y-6 max-w-2xl">
+        <div className="min-w-0 space-y-6 max-w-2xl">
           <button
             onClick={() => { setStep('select'); setError('') }}
             className="text-sm font-semibold text-ink/55 hover:text-ink bg-transparent border-0 cursor-pointer"
           >
             ← Back to apps
           </button>
-          <div className="bg-white p-6 rounded-2xl border border-ink/10 shadow-sm">
+          <div className="min-w-0 max-w-full bg-white p-4 sm:p-6 rounded-2xl border border-ink/10 shadow-sm">
             <p className="text-xs font-mono text-ink/35 mb-3">
               {selectedApps.length} apps · {reviewCount.toLocaleString()} reviews scanned ·
               {selectedApps.some(a => a.store === 'appstore') && ' 🍎'}
               {selectedApps.some(a => a.store === 'playstore') && ' 🤖'}
             </p>
-            <h2 className="font-serif text-2xl font-black text-ink mb-3">
-              Gaps in the &quot;{market}&quot; market
+            <h2 className="min-w-0 wrap-anywhere font-serif text-2xl font-black text-ink mb-3">
+              Gaps in the &quot;{analysisMarket}&quot; market
             </h2>
-            <p className="text-sm text-ink/65 leading-relaxed font-light">{analysis.summary}</p>
+            <p className="min-w-0 wrap-anywhere text-sm text-ink/65 leading-relaxed font-light">{analysis.summary}</p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-ink/10 shadow-sm overflow-hidden divide-y divide-ink/6">
+          <div className="min-w-0 max-w-full bg-white rounded-2xl border border-ink/10 shadow-sm overflow-hidden divide-y divide-ink/6">
             {analysis.gaps.map(gap => (
-              <div key={gap.rank} className="p-6 flex items-start gap-4">
+              <div key={gap.rank} className="min-w-0 p-4 sm:p-6 grid grid-cols-[1.25rem_minmax(0,1fr)] sm:grid-cols-[1.25rem_minmax(0,1fr)_auto] items-start gap-x-3 sm:gap-x-4 gap-y-2">
                 <span className="font-mono text-sm font-bold text-ink/25 w-5 pt-0.5 shrink-0">{gap.rank}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    <h3 className="text-[15px] font-semibold text-ink">{gap.complaint}</h3>
+                    <h3 className="min-w-0 wrap-anywhere text-[15px] font-semibold text-ink">{gap.complaint}</h3>
                     <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded
                       ${gap.opportunity === 'Critical' ? 'bg-lime text-ink'
                         : gap.opportunity === 'High' ? 'bg-ink text-paper'
@@ -499,9 +501,9 @@ export default function ValidatePage() {
                       {gap.opportunity}
                     </span>
                   </div>
-                  <p className="text-sm text-ink/55 font-light leading-relaxed">{gap.detail}</p>
+                  <p className="min-w-0 wrap-anywhere text-sm text-ink/55 font-light leading-relaxed">{gap.detail}</p>
                 </div>
-                <span className="text-xs font-mono text-ink/35 whitespace-nowrap pt-0.5 shrink-0">
+                <span className="col-span-2 justify-self-end sm:col-span-1 text-xs font-mono text-ink/35 whitespace-nowrap pt-0.5">
                   ~{gap.mentions}
                 </span>
               </div>
@@ -515,9 +517,9 @@ export default function ValidatePage() {
               </h3>
               <div className="space-y-3">
                 {analysis.opportunities.map((opportunity, index) => (
-                  <article key={`${opportunity.title}-${index}`} className="bg-white p-5 rounded-xl border border-ink/10">
-                    <h4 className="text-sm font-semibold text-ink mb-1">{opportunity.title}</h4>
-                    <p className="text-sm text-ink/60 leading-relaxed">{opportunity.description}</p>
+                  <article key={`${opportunity.title}-${index}`} className="min-w-0 max-w-full bg-white p-4 sm:p-5 rounded-xl border border-ink/10">
+                    <h4 className="min-w-0 wrap-anywhere text-sm font-semibold text-ink mb-1">{opportunity.title}</h4>
+                    <p className="min-w-0 wrap-anywhere text-sm text-ink/60 leading-relaxed">{opportunity.description}</p>
                   </article>
                 ))}
               </div>
