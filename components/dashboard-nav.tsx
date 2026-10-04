@@ -36,9 +36,9 @@ export default function DashboardNav({ planType, creditsUsed = 0, creditsLimit =
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-           <Link href="/dashboard" className="font-serif text-lg font-bold text-ink flex items-center gap-2">
+           <Link href="/dashboard" className="font-serif text-lg font-bold text-ink flex items-center ">
             <span className="bg-ink text-lime px-2 py-0.5 rounded text-xs font-mono font-bold">V</span>
-            ValidateIt
+            alidateIt
           </Link>
 
           {/* Desktop nav links */}

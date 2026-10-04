@@ -81,9 +81,9 @@ export default function SignupPage() {
     <div className="min-h-screen bg-paper font-sans flex flex-col">
       {/* Nav */}
        <nav className="border-b border-ink/[0.07] px-6  py-2 flex items-center justify-between max-w-5xl mx-auto w-full">
-       <Link href="/" className="font-serif text-lg font-bold text-ink flex items-center gap-2">
+       <Link href="/" className="font-serif text-lg font-bold text-ink flex items-center ">
             <span className="bg-ink text-lime px-2 py-0.5 rounded text-xs font-mono font-bold">V</span>
-            ValidateIt
+            alidateIt
           </Link>
         <Link href="/login" className="text-[12px] text-ink/50 hover:text-ink">
           Have an account? <span className="font-bold text-ink underline">Log in</span>
