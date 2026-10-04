@@ -47,9 +47,9 @@ export default function Home() {
       {/* ── HERO ── */}
       <section className="mx-auto max-w-3xl px-6 pb-16 pt-20 text-center">
 
-        <h1 className="mb-5 font-serif text-[52px] font-black leading-[1.05] tracking-[-2px] text-ink sm:text-[64px]">
+        <h1 className="mb-5 font-serif text-[36px] font-black leading-[1.05] tracking-[-2px] text-ink sm:text-[64px]">
           Build what users<br />
-          <span className="bg-lime px-2 italic">are begging for.</span>
+          <span className="bg-lime px-2 italic">are begging for</span>
         </h1>
 
         <p className="mx-auto mb-8 max-w-md text-[16px] font-light leading-relaxed text-ink/60">
