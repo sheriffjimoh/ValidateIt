@@ -3,16 +3,16 @@
 import Link from 'next/link'
 import  { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import Image from 'next/image'
 
 
 export default function HomeHeader() {
 
-  const supabase = createClient()
+ 
   const [user, setUser] = useState<any>(null)
 
 useEffect(() => {
     const loadUser = async () => {
+       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()    
       setUser(user ? user : null)
     }
